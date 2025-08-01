@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.eclipse.mcp.feature"
+      label="Eclipse MCP Server Feature"
+      version="1.0.0.qualifier"
+      provider-name="Eclipse MCP">
+
+   <description url="http://www.example.com/description">
+      Eclipse Plugin providing MCP (Model Context Protocol) server functionality
+   </description>
+
+   <copyright url="http://www.example.com/copyright">
+      Copyright (c) 2024 Eclipse MCP Contributors
+   </copyright>
+
+   <license url="http://www.example.com/license">
+      Eclipse Public License v2.0
+   </license>
+
+   <plugin
+         id="com.eclipse.mcp.server"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

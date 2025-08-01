@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="mcpHandlers" name="MCP Handlers" schema="schema/mcpHandlers.exsd"/>
+   
+   <extension point="org.eclipse.ui.startup">
+      <startup class="com.eclipse.mcp.server.startup.MCPServerStartup"/>
+   </extension>
+   
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="com.eclipse.mcp.server.preferences.PreferenceInitializer"/>
+   </extension>
+   
+   <extension point="org.eclipse.ui.preferencePages">
+      <page
+            category="org.eclipse.ui.preferencePages.Workbench"
+            class="com.eclipse.mcp.server.preferences.MCPPreferencePage"
+            id="com.eclipse.mcp.server.preferences.MCPPreferencePage"
+            name="MCP Server">
+      </page>
+   </extension>
+</plugin>

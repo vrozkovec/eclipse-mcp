@@ -1,0 +1,84 @@
+name: Release Eclipse MCP Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.m2/repository/.cache/tycho
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+          
+    - name: Build release
+      run: mvn clean verify --batch-mode --no-transfer-progress
+      
+    - name: Prepare release artifacts
+      run: |
+        mkdir -p release-artifacts
+        cp com.eclipse.mcp.server/target/*.jar release-artifacts/ || true
+        cp -r com.eclipse.mcp.updatesite/target/repository release-artifacts/updatesite || true
+        
+    - name: Create release archive
+      run: |
+        cd release-artifacts
+        tar -czf ../eclipse-mcp-plugin-${{ github.ref_name }}.tar.gz .
+        cd ..
+        
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        echo "## Eclipse MCP Plugin Release ${{ github.ref_name }}" > RELEASE_NOTES.md
+        echo "" >> RELEASE_NOTES.md
+        echo "### Features" >> RELEASE_NOTES.md
+        echo "- Find Java types (Open Type equivalent)" >> RELEASE_NOTES.md
+        echo "- Find resources (Open Resource equivalent)" >> RELEASE_NOTES.md
+        echo "- Run JUnit tests" >> RELEASE_NOTES.md
+        echo "- Read project problems" >> RELEASE_NOTES.md
+        echo "- Execute source actions (Alt+Shift+S)" >> RELEASE_NOTES.md
+        echo "- Execute refactor actions (Alt+Shift+T)" >> RELEASE_NOTES.md
+        echo "- Run Maven goals" >> RELEASE_NOTES.md
+        echo "- Update Maven projects" >> RELEASE_NOTES.md
+        echo "" >> RELEASE_NOTES.md
+        echo "### Installation" >> RELEASE_NOTES.md
+        echo "1. Download the plugin JAR or use the update site" >> RELEASE_NOTES.md
+        echo "2. Install in Eclipse via Help → Install New Software" >> RELEASE_NOTES.md
+        echo "3. Restart Eclipse" >> RELEASE_NOTES.md
+        echo "" >> RELEASE_NOTES.md
+        echo "### Requirements" >> RELEASE_NOTES.md
+        echo "- Eclipse 2024-12 or later" >> RELEASE_NOTES.md
+        echo "- Java 21 or later" >> RELEASE_NOTES.md
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          eclipse-mcp-plugin-${{ github.ref_name }}.tar.gz
+          release-artifacts/*.jar
+        body_path: RELEASE_NOTES.md
+        draft: false
+        prerelease: false
+        generate_release_notes: true

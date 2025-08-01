@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.eclipse.mcp</groupId>
+        <artifactId>eclipse-mcp-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>com.eclipse.mcp.feature</artifactId>
+    <packaging>eclipse-feature</packaging>
+
+    <name>Eclipse MCP Feature</name>
+    <description>Feature containing Eclipse MCP Server plugin</description>
+</project>

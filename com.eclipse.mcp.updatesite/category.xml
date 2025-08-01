@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/com.eclipse.mcp.feature_1.0.0.qualifier.jar" id="com.eclipse.mcp.feature" version="1.0.0.qualifier">
+      <category name="mcp"/>
+   </feature>
+   <category-def name="mcp" label="MCP (Model Context Protocol)">
+      <description>
+         Eclipse plugins for MCP (Model Context Protocol) server functionality
+      </description>
+   </category-def>
+</site>
