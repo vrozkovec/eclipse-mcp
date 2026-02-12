@@ -11,7 +11,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.eclipse.m2e.core.project.IMavenProjectRegistry;
-import org.eclipse.m2e.core.project.MavenUpdateRequest;
+import java.util.List;
 import org.eclipse.ui.PlatformUI;
 
 public class MavenUpdateProjectTool implements Tool {
@@ -50,12 +50,7 @@ public class MavenUpdateProjectTool implements Tool {
         IProgressMonitor monitor = new NullProgressMonitor();
         
         try {
-            MavenUpdateRequest updateRequest = new MavenUpdateRequest(project, 
-                false, // offline
-                forceUpdate // forceUpdateDependencies
-            );
-            
-            MavenPlugin.getMavenProjectRegistry().refresh(updateRequest, monitor);
+            MavenPlugin.getMavenProjectRegistry().refresh(List.of(project.getFile("pom.xml")), monitor);
             
             Map<String, Object> result = new HashMap<>();
             result.put("projectName", projectName);

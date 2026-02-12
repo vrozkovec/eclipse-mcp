@@ -1,5 +1,6 @@
 package com.eclipse.mcp.server.protocol;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -89,14 +90,17 @@ public class MCPMessage {
         this.error = error;
     }
     
+    @JsonIgnore
     public boolean isRequest() {
         return method != null && id != null;
     }
     
+    @JsonIgnore
     public boolean isResponse() {
         return id != null && (result != null || error != null);
     }
     
+    @JsonIgnore
     public boolean isNotification() {
         return method != null && id == null;
     }

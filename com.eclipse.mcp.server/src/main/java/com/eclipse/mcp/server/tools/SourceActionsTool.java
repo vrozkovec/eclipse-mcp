@@ -8,10 +8,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.ui.actions.GenerateConstructorUsingFieldsAction;
-import org.eclipse.jdt.ui.actions.GenerateHashCodeEqualsAction;
-import org.eclipse.jdt.ui.actions.GenerateToStringAction;
-import org.eclipse.jdt.ui.actions.GetterSetterAction;
 import org.eclipse.ui.PlatformUI;
 
 public class SourceActionsTool implements Tool {

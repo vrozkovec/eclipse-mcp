@@ -1,8 +1,11 @@
 package com.eclipse.mcp.server.handlers;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import com.eclipse.mcp.server.tools.AnalyzeTypeDependenciesTool;
+import com.eclipse.mcp.server.tools.FindReferencesTool;
 import com.eclipse.mcp.server.tools.FindResourceTool;
 import com.eclipse.mcp.server.tools.FindTypeTool;
 import com.eclipse.mcp.server.tools.GetProblemsTool;
@@ -35,6 +38,8 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("refactor_actions", new RefactorActionsTool());
         tools.put("maven_goal", new MavenGoalTool());
         tools.put("maven_update_project", new MavenUpdateProjectTool());
+        tools.put("find_references", new FindReferencesTool());
+        tools.put("analyze_type_dependencies", new AnalyzeTypeDependenciesTool());
     }
 
     @Override
@@ -55,11 +60,13 @@ public class ToolsCallHandler implements MCPRequestHandler {
         }
         
         Object result = tool.execute(argumentsMap);
-        
+
+        String textContent = objectMapper.writeValueAsString(result);
+
         Map<String, Object> response = new HashMap<>();
-        response.put("content", result);
+        response.put("content", List.of(Map.of("type", "text", "text", textContent)));
         response.put("isError", false);
-        
+
         return response;
     }
 }

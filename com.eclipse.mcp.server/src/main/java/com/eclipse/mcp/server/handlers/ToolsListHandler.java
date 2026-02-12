@@ -172,9 +172,64 @@ public class ToolsListHandler implements MCPRequestHandler {
             )
         ));
         
+        tools.add(createTool(
+            "find_references",
+            "Find all references to a Java element (type, method, or field) across the workspace. Equivalent to Ctrl+Shift+G in Eclipse.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "elementName", Map.of(
+                        "type", "string",
+                        "description", "Name of the element to find references for (simple name or fully qualified)"
+                    ),
+                    "elementType", Map.of(
+                        "type", "string",
+                        "description", "Type of the element: 'type', 'method', or 'field'",
+                        "enum", List.of("type", "method", "field"),
+                        "default", "type"
+                    ),
+                    "projectScope", Map.of(
+                        "type", "string",
+                        "description", "Limit search to a specific project (optional)"
+                    ),
+                    "caseSensitive", Map.of(
+                        "type", "boolean",
+                        "description", "Whether the search should be case sensitive",
+                        "default", true
+                    )
+                ),
+                "required", List.of("elementName")
+            )
+        ));
+
+        tools.add(createTool(
+            "analyze_type_dependencies",
+            "Analyze all type dependencies of a Java type. Returns all types referenced in the source, grouped by package and source (project/JAR). Useful for understanding what a type depends on before extracting it to another project.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "typeName", Map.of(
+                        "type", "string",
+                        "description", "Fully qualified name of the type to analyze (e.g., 'com.example.MyClass')"
+                    ),
+                    "excludePackages", Map.of(
+                        "type", "array",
+                        "items", Map.of("type", "string"),
+                        "description", "Package prefixes to flag as problematic dependencies (e.g., ['org.hibernate', 'com.google.inject'])"
+                    ),
+                    "includeTransitive", Map.of(
+                        "type", "boolean",
+                        "description", "Whether to recursively analyze project-local dependencies (capped at 100 types)",
+                        "default", false
+                    )
+                ),
+                "required", List.of("typeName")
+            )
+        ));
+
         Map<String, Object> result = new HashMap<>();
         result.put("tools", tools);
-        
+
         return result;
     }
     

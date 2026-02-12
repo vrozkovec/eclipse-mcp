@@ -14,7 +14,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
     @Override
     public void initializeDefaultPreferences() {
         IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-        store.setDefault(PREF_SERVER_PORT, 8080);
+        store.setDefault(PREF_SERVER_PORT, 8099);
         store.setDefault(PREF_SERVER_ENABLED, true);
         store.setDefault(PREF_AUTO_START, true);
     }
