@@ -36,70 +36,43 @@ public class GetProblemsTool implements Tool {
         if (!project.exists() || !project.isOpen()) {
             throw new IllegalArgumentException("Project not found or not open: " + projectName);
         }
-        
+
         List<Map<String, Object>> errors = new ArrayList<>();
-        List<Map<String, Object>> warnings = new ArrayList<>();
-        List<Map<String, Object>> infos = new ArrayList<>();
-        
+
         IMarker[] markers = project.findMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
-        
+
         for (IMarker marker : markers) {
-            Map<String, Object> problem = new HashMap<>();
-            
-            problem.put("message", marker.getAttribute(IMarker.MESSAGE, ""));
-            problem.put("severity", marker.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO));
-            problem.put("lineNumber", marker.getAttribute(IMarker.LINE_NUMBER, -1));
-            problem.put("charStart", marker.getAttribute(IMarker.CHAR_START, -1));
-            problem.put("charEnd", marker.getAttribute(IMarker.CHAR_END, -1));
-            
+            int severity = marker.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
+            if (severity != IMarker.SEVERITY_ERROR) {
+                continue;
+            }
+
+            Map<String, Object> error = new HashMap<>();
+
+            error.put("message", marker.getAttribute(IMarker.MESSAGE, ""));
+            error.put("lineNumber", marker.getAttribute(IMarker.LINE_NUMBER, -1));
+            error.put("charStart", marker.getAttribute(IMarker.CHAR_START, -1));
+            error.put("charEnd", marker.getAttribute(IMarker.CHAR_END, -1));
+
             IResource resource = marker.getResource();
             if (resource != null) {
-                problem.put("resourcePath", resource.getFullPath().toString());
-                problem.put("resourceName", resource.getName());
+                error.put("resourcePath", resource.getFullPath().toString());
+                error.put("resourceName", resource.getName());
                 if (resource.getLocation() != null) {
-                    problem.put("location", resource.getLocation().toString());
+                    error.put("location", resource.getLocation().toString());
                 }
             }
-            
-            problem.put("sourceId", marker.getAttribute(IMarker.SOURCE_ID, ""));
-            problem.put("priority", marker.getAttribute(IMarker.PRIORITY, IMarker.PRIORITY_NORMAL));
-            
-            Object userEditable = marker.getAttribute(IMarker.USER_EDITABLE);
-            if (userEditable != null) {
-                problem.put("userEditable", userEditable);
-            }
-            
-            try {
-                problem.put("attributes", marker.getAttributes());
-            } catch (Exception e) {
-                // Ignore if we can't get all attributes
-            }
-            
-            int severity = marker.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
-            switch (severity) {
-                case IMarker.SEVERITY_ERROR:
-                    errors.add(problem);
-                    break;
-                case IMarker.SEVERITY_WARNING:
-                    warnings.add(problem);
-                    break;
-                case IMarker.SEVERITY_INFO:
-                default:
-                    infos.add(problem);
-                    break;
-            }
+
+            error.put("sourceId", marker.getAttribute(IMarker.SOURCE_ID, ""));
+
+            errors.add(error);
         }
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("projectName", projectName);
         result.put("errors", errors);
-        result.put("warnings", warnings);
-        result.put("infos", infos);
-        result.put("totalProblems", markers.length);
         result.put("errorCount", errors.size());
-        result.put("warningCount", warnings.size());
-        result.put("infoCount", infos.size());
-        
+
         return result;
     }
 }

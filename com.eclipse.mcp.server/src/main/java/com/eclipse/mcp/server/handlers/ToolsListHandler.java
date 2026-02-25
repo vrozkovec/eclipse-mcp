@@ -75,7 +75,7 @@ public class ToolsListHandler implements MCPRequestHandler {
         
         tools.add(createTool(
             "get_problems",
-            "Get problems (errors/warnings) for a project",
+            "Get compilation errors for a project",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
