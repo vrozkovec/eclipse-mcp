@@ -5,14 +5,19 @@ import java.util.List;
 import java.util.Map;
 
 import com.eclipse.mcp.server.tools.AnalyzeTypeDependenciesTool;
+import com.eclipse.mcp.server.tools.CleanWorkspaceTool;
+import com.eclipse.mcp.server.tools.DebugRelaunchTool;
 import com.eclipse.mcp.server.tools.FindReferencesTool;
 import com.eclipse.mcp.server.tools.FindResourceTool;
 import com.eclipse.mcp.server.tools.FindTypeTool;
+import com.eclipse.mcp.server.tools.GetBuildStatusTool;
 import com.eclipse.mcp.server.tools.GetProblemsTool;
 import com.eclipse.mcp.server.tools.MavenGoalTool;
 import com.eclipse.mcp.server.tools.MavenUpdateProjectTool;
 import com.eclipse.mcp.server.tools.RefactorActionsTool;
+import com.eclipse.mcp.server.tools.RefreshWorkspaceTool;
 import com.eclipse.mcp.server.tools.RunTestsTool;
+import com.eclipse.mcp.server.tools.StopJavaApplicationTool;
 import com.eclipse.mcp.server.tools.SourceActionsTool;
 import com.eclipse.mcp.server.tools.Tool;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +45,11 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("maven_update_project", new MavenUpdateProjectTool());
         tools.put("find_references", new FindReferencesTool());
         tools.put("analyze_type_dependencies", new AnalyzeTypeDependenciesTool());
+        tools.put("clean_workspace", new CleanWorkspaceTool());
+        tools.put("refresh_workspace", new RefreshWorkspaceTool());
+        tools.put("debug_relaunch", new DebugRelaunchTool());
+        tools.put("get_build_status", new GetBuildStatusTool());
+        tools.put("stop_java_application", new StopJavaApplicationTool());
     }
 
     @Override

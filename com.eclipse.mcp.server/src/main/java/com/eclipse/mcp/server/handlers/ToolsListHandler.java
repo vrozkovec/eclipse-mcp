@@ -227,6 +227,56 @@ public class ToolsListHandler implements MCPRequestHandler {
             )
         ));
 
+        tools.add(createTool(
+            "clean_workspace",
+            "Clean the entire workspace. Equivalent to Project > Clean > Clean all projects in Eclipse. Removes all build artifacts and triggers a fresh build.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of()
+            )
+        ));
+
+        tools.add(createTool(
+            "refresh_workspace",
+            "Refresh all open projects in the workspace. Equivalent to selecting all projects and pressing F5. Synchronizes the workspace with the filesystem.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of()
+            )
+        ));
+
+        tools.add(createTool(
+            "debug_relaunch",
+            "Stop any currently running program and relaunch the most recently used launch configuration in debug mode. Equivalent to Ctrl+F2 (Terminate) followed by F11 (Debug Last Launched). Optionally specify a launch configuration by name.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "configurationName", Map.of(
+                        "type", "string",
+                        "description", "Name of a specific launch configuration to use. If omitted, the most recently launched configuration is used."
+                    )
+                )
+            )
+        ));
+
+        tools.add(createTool(
+            "get_build_status",
+            "Check whether Eclipse is currently building the workspace. Returns build-in-progress flag, auto-build status, and current error/warning counts. Useful for polling after clean_workspace to know when the build is complete.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of()
+            )
+        ));
+
+        tools.add(createTool(
+            "stop_java_application",
+            "Stop all currently running Java applications. Only terminates Java launches (local apps, JUnit) — external tools and other non-Java launches are left untouched. Equivalent to Ctrl+F2 (Terminate) for Java processes.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of()
+            )
+        ));
+
         Map<String, Object> result = new HashMap<>();
         result.put("tools", tools);
 
