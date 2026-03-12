@@ -229,7 +229,21 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "clean_workspace",
-            "Clean the entire workspace. Equivalent to Project > Clean > Clean all projects in Eclipse. Removes all build artifacts and triggers a fresh build.",
+            "Clean projects in the workspace (Project > Clean). If projectName is provided, only that project is cleaned. Otherwise all open projects are cleaned.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "projectName", Map.of(
+                        "type", "string",
+                        "description", "Name of a specific project to clean. If omitted, all open projects are cleaned."
+                    )
+                )
+            )
+        ));
+
+        tools.add(createTool(
+            "list_projects",
+            "List all projects in the Eclipse workspace with their name, location, and open status.",
             Map.of(
                 "type", "object",
                 "properties", Map.of()
@@ -237,11 +251,31 @@ public class ToolsListHandler implements MCPRequestHandler {
         ));
 
         tools.add(createTool(
-            "refresh_workspace",
-            "Refresh all open projects in the workspace. Equivalent to selecting all projects and pressing F5. Synchronizes the workspace with the filesystem.",
+            "resolve_project",
+            "Resolve an absolute filesystem path to the Eclipse workspace project that contains it. Returns the project name, location, and open status. Useful for determining which projectName to pass to tools like get_problems, clean_workspace, or refresh_workspace.",
             Map.of(
                 "type", "object",
-                "properties", Map.of()
+                "properties", Map.of(
+                    "path", Map.of(
+                        "type", "string",
+                        "description", "Absolute filesystem path to resolve (e.g., '/speedy/dev/name.berries/wicket-common/src/main/java')"
+                    )
+                ),
+                "required", List.of("path")
+            )
+        ));
+
+        tools.add(createTool(
+            "refresh_workspace",
+            "Refresh projects in the workspace (F5). If projectName is provided, only that project is refreshed. Otherwise all open projects are refreshed.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "projectName", Map.of(
+                        "type", "string",
+                        "description", "Name of a specific project to refresh. If omitted, all open projects are refreshed."
+                    )
+                )
             )
         ));
 

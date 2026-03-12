@@ -12,10 +12,12 @@ import com.eclipse.mcp.server.tools.FindResourceTool;
 import com.eclipse.mcp.server.tools.FindTypeTool;
 import com.eclipse.mcp.server.tools.GetBuildStatusTool;
 import com.eclipse.mcp.server.tools.GetProblemsTool;
+import com.eclipse.mcp.server.tools.ListProjectsTool;
 import com.eclipse.mcp.server.tools.MavenGoalTool;
 import com.eclipse.mcp.server.tools.MavenUpdateProjectTool;
 import com.eclipse.mcp.server.tools.RefactorActionsTool;
 import com.eclipse.mcp.server.tools.RefreshWorkspaceTool;
+import com.eclipse.mcp.server.tools.ResolveProjectTool;
 import com.eclipse.mcp.server.tools.RunTestsTool;
 import com.eclipse.mcp.server.tools.StopJavaApplicationTool;
 import com.eclipse.mcp.server.tools.SourceActionsTool;
@@ -50,6 +52,8 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("debug_relaunch", new DebugRelaunchTool());
         tools.put("get_build_status", new GetBuildStatusTool());
         tools.put("stop_java_application", new StopJavaApplicationTool());
+        tools.put("list_projects", new ListProjectsTool());
+        tools.put("resolve_project", new ResolveProjectTool());
     }
 
     @Override

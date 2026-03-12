@@ -12,23 +12,45 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.ui.PlatformUI;
 
 /**
- * Refreshes all open projects in the workspace, equivalent to selecting all projects and pressing F5.
+ * Refreshes projects in the workspace, equivalent to pressing F5.
  * Synchronizes the workspace with the filesystem.
+ *
+ * <p>If {@code projectName} is provided, only that project is refreshed.
+ * Otherwise all open projects are refreshed.</p>
  */
 public class RefreshWorkspaceTool implements Tool {
 
     @Override
     public Object execute(Map<String, Object> arguments) throws Exception {
+        String projectName = (String) arguments.get("projectName");
         return PlatformUI.getWorkbench().getDisplay().syncCall(() -> {
             try {
-                return refreshWorkspace();
+                if (projectName != null && !projectName.isBlank()) {
+                    return refreshProject(projectName);
+                }
+                return refreshAllProjects();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    private Map<String, Object> refreshWorkspace() throws Exception {
+    private Map<String, Object> refreshProject(String projectName) throws Exception {
+        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+        if (!project.exists() || !project.isOpen()) {
+            throw new IllegalArgumentException("Project not found or not open: " + projectName);
+        }
+
+        project.refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "refreshed");
+        result.put("projectCount", 1);
+        result.put("projects", List.of(projectName));
+        return result;
+    }
+
+    private Map<String, Object> refreshAllProjects() throws Exception {
         IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
         var monitor = new NullProgressMonitor();
 
