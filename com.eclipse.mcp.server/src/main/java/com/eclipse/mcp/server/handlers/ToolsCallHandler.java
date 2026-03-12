@@ -6,15 +6,18 @@ import java.util.Map;
 
 import com.eclipse.mcp.server.tools.AnalyzeTypeDependenciesTool;
 import com.eclipse.mcp.server.tools.CleanWorkspaceTool;
+import com.eclipse.mcp.server.tools.CleanupCodeTool;
 import com.eclipse.mcp.server.tools.DebugRelaunchTool;
 import com.eclipse.mcp.server.tools.FindReferencesTool;
 import com.eclipse.mcp.server.tools.FindResourceTool;
 import com.eclipse.mcp.server.tools.FindTypeTool;
+import com.eclipse.mcp.server.tools.FormatCodeTool;
 import com.eclipse.mcp.server.tools.GetBuildStatusTool;
 import com.eclipse.mcp.server.tools.GetProblemsTool;
 import com.eclipse.mcp.server.tools.ListProjectsTool;
 import com.eclipse.mcp.server.tools.MavenGoalTool;
 import com.eclipse.mcp.server.tools.MavenUpdateProjectTool;
+import com.eclipse.mcp.server.tools.OrganizeImportsTool;
 import com.eclipse.mcp.server.tools.RefactorActionsTool;
 import com.eclipse.mcp.server.tools.RefreshWorkspaceTool;
 import com.eclipse.mcp.server.tools.ResolveProjectTool;
@@ -54,6 +57,9 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("stop_java_application", new StopJavaApplicationTool());
         tools.put("list_projects", new ListProjectsTool());
         tools.put("resolve_project", new ResolveProjectTool());
+        tools.put("format_code", new FormatCodeTool());
+        tools.put("organize_imports", new OrganizeImportsTool());
+        tools.put("cleanup_code", new CleanupCodeTool());
     }
 
     @Override
