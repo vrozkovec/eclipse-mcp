@@ -313,18 +313,13 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "cleanup_code",
-            "Run Eclipse's 'Source > Clean Up' on Java source files using the project's cleanup profile. Applies code modernization rules like adding @Override, converting to enhanced for-loops, using lambda expressions, pattern matching instanceof, removing unnecessary casts, and more. Accepts a path to a single .java file or a directory.",
+            "Run Eclipse's 'Source > Clean Up' on Java source files using the project's cleanup profile. Applies code modernization rules like adding @Override, converting to enhanced for-loops, using lambda expressions, pattern matching instanceof, removing unnecessary casts, and more. Accepts a path to a single .java file or a directory (recursively).",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
                     "path", Map.of(
                         "type", "string",
                         "description", "Absolute filesystem path to a .java file or directory containing Java files"
-                    ),
-                    "recursive", Map.of(
-                        "type", "boolean",
-                        "description", "Whether to recurse into subdirectories when path is a directory",
-                        "default", true
                     )
                 ),
                 "required", List.of("path")
@@ -333,18 +328,13 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "format_code",
-            "Format Java source files using Eclipse's code formatter with project-specific settings (e.g., EclipseCodeStyle.xml). Accepts a path to a single .java file or a directory to format all Java files within it.",
+            "Format Java source files using Eclipse's code formatter with project-specific settings (e.g., EclipseCodeStyle.xml). Accepts a path to a single .java file or a directory (recursively).",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
                     "path", Map.of(
                         "type", "string",
                         "description", "Absolute filesystem path to a .java file or directory containing Java files"
-                    ),
-                    "recursive", Map.of(
-                        "type", "boolean",
-                        "description", "Whether to recurse into subdirectories when path is a directory",
-                        "default", true
                     )
                 ),
                 "required", List.of("path")
@@ -353,18 +343,13 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "organize_imports",
-            "Organize imports in Java source files using Eclipse's import organizer with project-specific settings. Removes unused imports, adds missing ones, and sorts them according to project preferences. Accepts a path to a single .java file or a directory.",
+            "Organize imports in Java source files using Eclipse's import organizer with project-specific settings. Removes unused imports, adds missing ones, and sorts them according to project preferences. Accepts a path to a single .java file or a directory (recursively).",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
                     "path", Map.of(
                         "type", "string",
                         "description", "Absolute filesystem path to a .java file or directory containing Java files"
-                    ),
-                    "recursive", Map.of(
-                        "type", "boolean",
-                        "description", "Whether to recurse into subdirectories when path is a directory",
-                        "default", true
                     )
                 ),
                 "required", List.of("path")

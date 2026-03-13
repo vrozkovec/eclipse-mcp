@@ -31,8 +31,7 @@ import org.eclipse.ui.PlatformUI;
  * and more — depending on the configured cleanup profile.</p>
  *
  * <p>Accepts an absolute filesystem path to a {@code .java} file or a directory.
- * When a directory is given, all {@code .java} files within it are cleaned up
- * (optionally recursively).</p>
+ * When a directory is given, all {@code .java} files within it are cleaned up recursively.</p>
  */
 @SuppressWarnings("restriction")
 public class CleanupCodeTool implements Tool {
@@ -43,11 +42,9 @@ public class CleanupCodeTool implements Tool {
 		if (path == null || path.isBlank()) {
 			throw new IllegalArgumentException("Required parameter 'path' is missing");
 		}
-		Boolean recursive = (Boolean) arguments.getOrDefault("recursive", Boolean.TRUE);
-
 		return PlatformUI.getWorkbench().getDisplay().syncCall(() -> {
 			try {
-				return cleanupPath(path, recursive);
+				return cleanupPath(path);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -57,7 +54,7 @@ public class CleanupCodeTool implements Tool {
 	/**
 	 * Runs cleanup on all Java files at the given path.
 	 */
-	private Map<String, Object> cleanupPath(String path, boolean recursive) throws Exception {
+	private Map<String, Object> cleanupPath(String path) throws Exception {
 		String normalizedPath = Path.of(path).normalize().toString();
 		IProject project = resolveProject(normalizedPath);
 		if (!project.isOpen()) {
@@ -74,7 +71,7 @@ public class CleanupCodeTool implements Tool {
 			throw new IllegalArgumentException("Resource not found in project: " + path);
 		}
 
-		List<ICompilationUnit> units = collectCompilationUnits(resource, recursive);
+		List<ICompilationUnit> units = collectCompilationUnits(resource);
 		List<String> cleanedFiles = new ArrayList<>();
 		int skipped = 0;
 
@@ -130,7 +127,7 @@ public class CleanupCodeTool implements Tool {
 	/**
 	 * Collects all {@link ICompilationUnit}s from the given resource.
 	 */
-	private List<ICompilationUnit> collectCompilationUnits(IResource resource, boolean recursive) throws Exception {
+	private List<ICompilationUnit> collectCompilationUnits(IResource resource) throws Exception {
 		List<ICompilationUnit> units = new ArrayList<>();
 
 		if (resource instanceof IFile file && file.getName().endsWith(".java")) {
@@ -139,7 +136,7 @@ public class CleanupCodeTool implements Tool {
 				units.add(cu);
 			}
 		} else if (resource instanceof IContainer container) {
-			collectFromContainer(container, recursive, units);
+			collectFromContainer(container, units);
 		}
 
 		return units;
@@ -148,16 +145,15 @@ public class CleanupCodeTool implements Tool {
 	/**
 	 * Recursively collects compilation units from a container (project or folder).
 	 */
-	private void collectFromContainer(IContainer container, boolean recursive, List<ICompilationUnit> units)
-			throws Exception {
+	private void collectFromContainer(IContainer container, List<ICompilationUnit> units) throws Exception {
 		for (IResource member : container.members()) {
 			if (member instanceof IFile file && file.getName().endsWith(".java")) {
 				ICompilationUnit cu = JavaCore.createCompilationUnitFrom(file);
 				if (cu != null) {
 					units.add(cu);
 				}
-			} else if (recursive && member instanceof IContainer subContainer) {
-				collectFromContainer(subContainer, true, units);
+			} else if (member instanceof IContainer subContainer) {
+				collectFromContainer(subContainer, units);
 			}
 		}
 	}

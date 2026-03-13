@@ -24,8 +24,7 @@ import org.eclipse.ui.PlatformUI;
  * Formats Java source files using Eclipse's code formatter with project-specific settings.
  *
  * <p>Accepts an absolute filesystem path to a {@code .java} file or a directory.
- * When a directory is given, all {@code .java} files within it are formatted
- * (optionally recursively).</p>
+ * When a directory is given, all {@code .java} files within it are formatted recursively.</p>
  */
 public class FormatCodeTool implements Tool {
 
@@ -35,11 +34,9 @@ public class FormatCodeTool implements Tool {
 		if (path == null || path.isBlank()) {
 			throw new IllegalArgumentException("Required parameter 'path' is missing");
 		}
-		Boolean recursive = (Boolean) arguments.getOrDefault("recursive", Boolean.TRUE);
-
 		return PlatformUI.getWorkbench().getDisplay().syncCall(() -> {
 			try {
-				return formatPath(path, recursive);
+				return formatPath(path);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -49,7 +46,7 @@ public class FormatCodeTool implements Tool {
 	/**
 	 * Formats all Java files at the given path.
 	 */
-	private Map<String, Object> formatPath(String path, boolean recursive) throws Exception {
+	private Map<String, Object> formatPath(String path) throws Exception {
 		String normalizedPath = Path.of(path).normalize().toString();
 		IProject project = resolveProject(normalizedPath);
 		if (!project.isOpen()) {
@@ -66,7 +63,7 @@ public class FormatCodeTool implements Tool {
 			throw new IllegalArgumentException("Resource not found in project: " + path);
 		}
 
-		List<ICompilationUnit> units = collectCompilationUnits(resource, recursive);
+		List<ICompilationUnit> units = collectCompilationUnits(resource);
 		List<String> formattedFiles = new ArrayList<>();
 		int skipped = 0;
 
@@ -109,7 +106,7 @@ public class FormatCodeTool implements Tool {
 	/**
 	 * Collects all {@link ICompilationUnit}s from the given resource.
 	 */
-	private List<ICompilationUnit> collectCompilationUnits(IResource resource, boolean recursive) throws Exception {
+	private List<ICompilationUnit> collectCompilationUnits(IResource resource) throws Exception {
 		List<ICompilationUnit> units = new ArrayList<>();
 
 		if (resource instanceof IFile file && file.getName().endsWith(".java")) {
@@ -118,7 +115,7 @@ public class FormatCodeTool implements Tool {
 				units.add(cu);
 			}
 		} else if (resource instanceof IContainer container) {
-			collectFromContainer(container, recursive, units);
+			collectFromContainer(container, units);
 		}
 
 		return units;
@@ -127,16 +124,15 @@ public class FormatCodeTool implements Tool {
 	/**
 	 * Recursively collects compilation units from a container (project or folder).
 	 */
-	private void collectFromContainer(IContainer container, boolean recursive, List<ICompilationUnit> units)
-			throws Exception {
+	private void collectFromContainer(IContainer container, List<ICompilationUnit> units) throws Exception {
 		for (IResource member : container.members()) {
 			if (member instanceof IFile file && file.getName().endsWith(".java")) {
 				ICompilationUnit cu = JavaCore.createCompilationUnitFrom(file);
 				if (cu != null) {
 					units.add(cu);
 				}
-			} else if (recursive && member instanceof IContainer subContainer) {
-				collectFromContainer(subContainer, true, units);
+			} else if (member instanceof IContainer subContainer) {
+				collectFromContainer(subContainer, units);
 			}
 		}
 	}
