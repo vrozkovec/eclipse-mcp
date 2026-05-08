@@ -74,6 +74,34 @@ public class ToolsListHandler implements MCPRequestHandler {
         ));
         
         tools.add(createTool(
+            "run_test_class",
+            "Launch a single JUnit test class (optionally a specific method) in the Eclipse JUnit runner " +
+            "and block until the session finishes (5-minute safety timeout). " +
+            "Test framework (JUnit 4 vs JUnit 5) is auto-detected from the project classpath: if " +
+            "org.junit.jupiter.api.Test is reachable, JUnit 5 (jupiter loader) is used, otherwise JUnit 4. " +
+            "Returns per-test outcomes (OK/FAILURE/ERROR/IGNORED) with failure traces, roll-up counts, " +
+            "elapsed time, and overall status (completed|timeout). Designed for fast tests (seconds).",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "projectName", Map.of(
+                        "type", "string",
+                        "description", "Name of the Eclipse project containing the test class"
+                    ),
+                    "className", Map.of(
+                        "type", "string",
+                        "description", "Fully qualified name of the test class (e.g., 'com.example.MyTest')"
+                    ),
+                    "testMethod", Map.of(
+                        "type", "string",
+                        "description", "Specific test method to run within the class (optional). Provide just the method name, not 'Class.method'."
+                    )
+                ),
+                "required", List.of("projectName", "className")
+            )
+        ));
+
+        tools.add(createTool(
             "get_problems",
             "Get compilation errors for a project",
             Map.of(
@@ -353,6 +381,34 @@ public class ToolsListHandler implements MCPRequestHandler {
                     )
                 ),
                 "required", List.of("path")
+            )
+        ));
+
+        tools.add(createTool(
+            "rename_package",
+            "Rename a Java package using Eclipse's refactoring engine. Updates the package declaration in all files, rewrites import statements across the workspace, and moves files to the new directory structure. Optionally renames sub-packages.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "packageName", Map.of(
+                        "type", "string",
+                        "description", "Fully qualified name of the package to rename (e.g., 'com.example.old')"
+                    ),
+                    "newPackageName", Map.of(
+                        "type", "string",
+                        "description", "Fully qualified new package name (e.g., 'com.example.renamed')"
+                    ),
+                    "projectName", Map.of(
+                        "type", "string",
+                        "description", "Name of the Eclipse project containing the package. If omitted, all workspace projects are searched."
+                    ),
+                    "renameSubpackages", Map.of(
+                        "type", "boolean",
+                        "description", "Whether to also rename sub-packages (e.g., com.example.old.util -> com.example.renamed.util)",
+                        "default", true
+                    )
+                ),
+                "required", List.of("packageName", "newPackageName")
             )
         ));
 

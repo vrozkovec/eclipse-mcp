@@ -19,8 +19,10 @@ import com.eclipse.mcp.server.tools.MavenGoalTool;
 import com.eclipse.mcp.server.tools.MavenUpdateProjectTool;
 import com.eclipse.mcp.server.tools.OrganizeImportsTool;
 import com.eclipse.mcp.server.tools.RefactorActionsTool;
+import com.eclipse.mcp.server.tools.RenamePackageTool;
 import com.eclipse.mcp.server.tools.RefreshWorkspaceTool;
 import com.eclipse.mcp.server.tools.ResolveProjectTool;
+import com.eclipse.mcp.server.tools.RunTestClassTool;
 import com.eclipse.mcp.server.tools.RunTestsTool;
 import com.eclipse.mcp.server.tools.StopJavaApplicationTool;
 import com.eclipse.mcp.server.tools.SourceActionsTool;
@@ -43,6 +45,7 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("find_type", new FindTypeTool());
         tools.put("find_resource", new FindResourceTool());
         tools.put("run_tests", new RunTestsTool());
+        tools.put("run_test_class", new RunTestClassTool());
         tools.put("get_problems", new GetProblemsTool());
         tools.put("source_actions", new SourceActionsTool());
         tools.put("refactor_actions", new RefactorActionsTool());
@@ -60,6 +63,7 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("format_code", new FormatCodeTool());
         tools.put("organize_imports", new OrganizeImportsTool());
         tools.put("cleanup_code", new CleanupCodeTool());
+        tools.put("rename_package", new RenamePackageTool());
     }
 
     @Override
