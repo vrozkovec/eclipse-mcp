@@ -9,7 +9,7 @@ The primary use case is enabling AI-assisted development workflows where Claude 
 ## Technology Stack
 
 - **Language**: Java 21
-- **Framework**: Eclipse Platform 4.32 (2024-12), OSGi
+- **Framework**: Eclipse Platform 4.39 (2026-03), OSGi
 - **Build**: Maven Tycho 4.0.13
 - **Protocol**: MCP (JSON-RPC 2.0, newline-delimited) over TCP
 - **Serialization**: Jackson (OSGi bundles)
@@ -22,7 +22,7 @@ export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64/
 mvn clean install
 ```
 
-JDK 21 is required — M2E 2.7.0 in the Eclipse 2024-12 target platform requires `JavaSE-21`. The default system JDK (25) is not recognized by Tycho 4.0.13.
+JDK 21 is required — M2E in the Eclipse 2026-03 target platform requires `JavaSE-21`. The default system JDK (25) is not recognized by Tycho 4.0.13.
 
 ## Project Structure
 

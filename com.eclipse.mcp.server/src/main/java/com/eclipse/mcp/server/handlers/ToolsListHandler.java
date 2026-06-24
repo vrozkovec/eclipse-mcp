@@ -52,7 +52,12 @@ public class ToolsListHandler implements MCPRequestHandler {
         
         tools.add(createTool(
             "run_tests",
-            "Run JUnit tests",
+            "Launch JUnit tests in run mode (fire-and-forget; does not wait for results — use run_test_class " +
+            "for per-test outcomes). Always uses Eclipse JDT's JUnit 6 loader. Scope is chosen by which " +
+            "optional argument is set: testClass (single class, optionally narrowed by testMethod), " +
+            "packageName (all tests directly in that package — picks the test source root when both src/main " +
+            "and src/test contain the package), or neither (all tests in the whole project). testClass and " +
+            "packageName are mutually exclusive.",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
@@ -62,11 +67,15 @@ public class ToolsListHandler implements MCPRequestHandler {
                     ),
                     "testClass", Map.of(
                         "type", "string",
-                        "description", "Specific test class to run (optional)"
+                        "description", "Fully qualified name of a single test class to run (optional). Mutually exclusive with packageName."
+                    ),
+                    "packageName", Map.of(
+                        "type", "string",
+                        "description", "Fully qualified package name to run all tests in (e.g., 'com.example.foo'). Only direct contents of the package — subpackages are not included. Mutually exclusive with testClass."
                     ),
                     "testMethod", Map.of(
                         "type", "string",
-                        "description", "Specific test method to run (optional)"
+                        "description", "Specific test method to run within testClass (optional; ignored if testClass is not set)"
                     )
                 ),
                 "required", List.of("projectName")
@@ -77,8 +86,9 @@ public class ToolsListHandler implements MCPRequestHandler {
             "run_test_class",
             "Launch a single JUnit test class (optionally a specific method) in the Eclipse JUnit runner " +
             "and block until the session finishes (5-minute safety timeout). " +
-            "Test framework (JUnit 4 vs JUnit 5) is auto-detected from the project classpath: if " +
-            "org.junit.jupiter.api.Test is reachable, JUnit 5 (jupiter loader) is used, otherwise JUnit 4. " +
+            "Always uses Eclipse JDT's JUnit 6 loader (org.eclipse.jdt.junit.loader.junit6). Eclipse keeps " +
+            "separate loaders for JUnit 5 and JUnit 6 — each loader's pre-launch check rejects mismatched " +
+            "major versions, so a project must have JUnit 6 on its build path. " +
             "Returns per-test outcomes (OK/FAILURE/ERROR/IGNORED) with failure traces, roll-up counts, " +
             "elapsed time, and overall status (completed|timeout). Designed for fast tests (seconds).",
             Map.of(

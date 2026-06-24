@@ -17,7 +17,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <tycho.version>4.0.13</tycho.version>
-        <eclipse.platform.version>4.32</eclipse.platform.version>
+        <eclipse.platform.version>4.39</eclipse.platform.version>
     </properties>
 
     <modules>
@@ -28,9 +28,9 @@
 
     <repositories>
         <repository>
-            <id>eclipse-2024-12</id>
+            <id>eclipse-2026-03</id>
             <layout>p2</layout>
-            <url>https://download.eclipse.org/releases/2024-12</url>
+            <url>https://download.eclipse.org/releases/2026-03</url>
         </repository>
     </repositories>
 

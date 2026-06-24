@@ -33,9 +33,12 @@ import org.eclipse.ui.PlatformUI;
  * Launches a single JUnit test class (optionally a single method) in the Eclipse JUnit runner
  * and blocks until the session finishes, returning per-test outcomes.
  *
- * <p>JUnit 4 vs JUnit 5 is auto-detected from the project's classpath: when
- * {@code org.junit.jupiter.api.Test} is reachable, the JUnit 5 (jupiter) loader is used and the
- * vintage engine handles JUnit 3/4 tests transparently. Otherwise the JUnit 4 loader is used.</p>
+ * <p>Always runs tests using Eclipse JDT's JUnit 6 loader
+ * ({@code org.eclipse.jdt.junit.loader.junit6}). Since Eclipse JDT 3.14, JUnit 5 and JUnit 6
+ * have distinct loaders, and each loader's pre-launch check requires that specific major
+ * version on the project's build path — using the JUnit 5 loader against a JUnit 6 project
+ * (or vice versa) fails with "Cannot find Testable on project build path." This tool is pinned
+ * to JUnit 6 because that is the supported version in this workspace.</p>
  *
  * <p>Unlike {@link RunTestsTool}, this tool sets the class FQN via
  * {@link IJavaLaunchConfigurationConstants#ATTR_MAIN_TYPE_NAME} and uses
@@ -55,9 +58,15 @@ public class RunTestClassTool implements Tool {
 	private static final String ATTR_CONTAINER = "org.eclipse.jdt.junit.CONTAINER";
 	private static final String ATTR_TEST_KIND = "org.eclipse.jdt.junit.TEST_KIND";
 	private static final String ATTR_TESTNAME = "org.eclipse.jdt.junit.TESTNAME";
-	private static final String LOADER_JUNIT4 = "org.eclipse.jdt.junit.loader.junit4";
-	private static final String LOADER_JUNIT5 = "org.eclipse.jdt.junit.loader.junit5";
-	private static final String JUPITER_TEST_FQN = "org.junit.jupiter.api.Test";
+	private static final String ATTR_KEEPRUNNING = "org.eclipse.jdt.junit.KEEPRUNNING_ATTR";
+
+	/**
+	 * Eclipse JDT's JUnit 6 loader id (added in JDT 3.14). Eclipse keeps separate loaders for
+	 * JUnit 5 and JUnit 6 — each loader's pre-launch check rejects mismatched JUnit versions
+	 * (e.g. the junit5 loader insists on JUnit major=5, the junit6 loader insists on major=6).
+	 * This tool is pinned to JUnit 6.
+	 */
+	private static final String LOADER_JUNIT6 = "org.eclipse.jdt.junit.loader.junit6";
 
 	/**
 	 * Validates arguments, registers a {@link TestRunListener}, launches the JUnit configuration
@@ -88,28 +97,27 @@ public class RunTestClassTool implements Tool {
 		ResultCollector collector = new ResultCollector(configName);
 		JUnitCore.addTestRunListener(collector);
 		try {
-			String testKind = PlatformUI.getWorkbench().getDisplay().syncCall(() -> {
+			PlatformUI.getWorkbench().getDisplay().syncCall(() -> {
 				try {
-					return setupAndLaunch(projectName, className, testMethod, configName);
+					setupAndLaunch(projectName, className, testMethod, configName);
+					return null;
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
 			});
 
 			boolean finished = collector.latch.await(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-			return buildResult(projectName, className, testMethod, configName, testKind, collector, finished);
+			return buildResult(projectName, className, testMethod, configName, collector, finished);
 		} finally {
 			JUnitCore.removeTestRunListener(collector);
 		}
 	}
 
 	/**
-	 * Resolves the project and target type, builds a JUnit launch configuration with the correct
-	 * test loader, saves it, and launches it in run mode. Must run on the UI thread.
-	 *
-	 * @return the resolved test kind (junit4 or junit5 loader id)
+	 * Resolves the project and target type, builds a JUnit launch configuration pinned to the
+	 * JUnit 6 loader, saves it, and launches it in run mode. Must run on the UI thread.
 	 */
-	private String setupAndLaunch(String projectName, String className, String testMethod, String configName)
+	private void setupAndLaunch(String projectName, String className, String testMethod, String configName)
 			throws CoreException {
 		IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 		if (!project.exists() || !project.isOpen()) {
@@ -126,8 +134,6 @@ public class RunTestClassTool implements Tool {
 					"Type '" + className + "' not found in project " + projectName);
 		}
 
-		String testKind = (javaProject.findType(JUPITER_TEST_FQN) != null) ? LOADER_JUNIT5 : LOADER_JUNIT4;
-
 		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
 		ILaunchConfigurationWorkingCopy config = launchManager
 				.getLaunchConfigurationType(JUNIT_LAUNCH_TYPE)
@@ -136,14 +142,14 @@ public class RunTestClassTool implements Tool {
 		config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
 		config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className);
 		config.setAttribute(ATTR_CONTAINER, "");
-		config.setAttribute(ATTR_TEST_KIND, testKind);
+		config.setAttribute(ATTR_TEST_KIND, LOADER_JUNIT6);
+		config.setAttribute(ATTR_KEEPRUNNING, false);
 		if (testMethod != null && !testMethod.trim().isEmpty()) {
 			config.setAttribute(ATTR_TESTNAME, testMethod);
 		}
 
 		ILaunchConfiguration saved = config.doSave();
 		saved.launch(ILaunchManager.RUN_MODE, new NullProgressMonitor());
-		return testKind;
 	}
 
 	/**
@@ -151,13 +157,13 @@ public class RunTestClassTool implements Tool {
 	 * and roll-up counts.
 	 */
 	private Map<String, Object> buildResult(String projectName, String className, String testMethod,
-			String configName, String testKind, ResultCollector collector, boolean finished) {
+			String configName, ResultCollector collector, boolean finished) {
 		Map<String, Object> result = new HashMap<>();
 		result.put("configurationName", configName);
 		result.put("projectName", projectName);
 		result.put("className", className);
 		result.put("testMethod", testMethod);
-		result.put("testKind", testKind);
+		result.put("testKind", LOADER_JUNIT6);
 		result.put("launchMode", ILaunchManager.RUN_MODE);
 
 		List<Map<String, Object>> tests = collector.snapshot();
