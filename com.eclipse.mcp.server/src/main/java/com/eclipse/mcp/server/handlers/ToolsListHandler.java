@@ -172,7 +172,7 @@ public class ToolsListHandler implements MCPRequestHandler {
         
         tools.add(createTool(
             "maven_goal",
-            "Execute Maven goals on a project",
+            "Run Maven goals on a project via an m2e launch (same as Run As > Maven build; external JVM using the workspace Maven runtime). Blocks until the build finishes or times out, then returns the exit code, BUILD SUCCESS/FAILURE detection and the tail of the Maven output. goals ['clean'] is equivalent to the Eclipse 'Maven clean' launch shortcut.",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
@@ -183,7 +183,12 @@ public class ToolsListHandler implements MCPRequestHandler {
                     "goals", Map.of(
                         "type", "array",
                         "items", Map.of("type", "string"),
-                        "description", "Maven goals to execute"
+                        "description", "Maven goals/phases for a single invocation, e.g. ['clean'] or ['clean', 'install']"
+                    ),
+                    "timeoutSeconds", Map.of(
+                        "type", "integer",
+                        "description", "Maximum seconds to wait before the Maven process is terminated",
+                        "default", 300
                     )
                 ),
                 "required", List.of("projectName", "goals")
@@ -267,13 +272,18 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "clean_workspace",
-            "Clean projects in the workspace (Project > Clean). If projectName is provided, only that project is cleaned. Otherwise all open projects are cleaned.",
+            "Clean projects in the workspace (Project > Clean). If projectName is provided, only that project is cleaned. Otherwise all open projects are cleaned. If mavenClean is true, 'mvn clean' is run first via an m2e launch, followed by a refresh from disk, then the Eclipse clean.",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
                     "projectName", Map.of(
                         "type", "string",
                         "description", "Name of a specific project to clean. If omitted, all open projects are cleaned."
+                    ),
+                    "mavenClean", Map.of(
+                        "type", "boolean",
+                        "description", "Run 'mvn clean' on the target project(s) before the Eclipse clean (then refresh from disk). Projects without the Maven nature are skipped. Runs sequentially - slow on large workspaces; prefer passing projectName (an aggregator project cleans all its modules in one run).",
+                        "default", false
                     )
                 )
             )

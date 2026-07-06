@@ -4,7 +4,7 @@ An Eclipse plugin that provides MCP (Model Context Protocol) server functionalit
 
 ## Features
 
-This plugin exposes **21 tools** through the MCP protocol, covering code search, workspace management, code quality, application lifecycle, and Maven integration.
+This plugin exposes **22 tools** through the MCP protocol, covering code search, workspace management, code quality, application lifecycle, and Maven integration.
 
 ### Search & Navigation
 | Tool | Description | Eclipse Equivalent |
@@ -20,7 +20,7 @@ This plugin exposes **21 tools** through the MCP protocol, covering code search,
 | `list_projects` | List all projects in the workspace with name, location, and open status | — |
 | `resolve_project` | Resolve a filesystem path to its containing Eclipse project | — |
 | `refresh_workspace` | Refresh projects (picks up external file changes) | F5 |
-| `clean_workspace` | Clean/rebuild projects | Project > Clean |
+| `clean_workspace` | Clean/rebuild projects; optional `mavenClean` runs `mvn clean` first (then refresh, then clean) | Project > Clean |
 | `get_problems` | Get compilation errors/warnings for a project | Problems view |
 | `get_build_status` | Check if Eclipse is currently building; includes error/warning counts | — |
 
@@ -36,18 +36,20 @@ This plugin exposes **21 tools** through the MCP protocol, covering code search,
 |------|-------------|--------------------|
 | `source_actions` | Generate getters/setters, constructors, toString, hashCode/equals | Alt+Shift+S |
 | `refactor_actions` | Rename, extract method/variable, inline, move | Alt+Shift+T |
+| `rename_package` | Rename a package across the workspace | Refactor > Rename |
 
 ### Application Lifecycle
 | Tool | Description | Eclipse Equivalent |
 |------|-------------|--------------------|
-| `run_tests` | Run JUnit tests for a project, class, or method | — |
+| `run_tests` | Run JUnit tests for a project, package, or class | — |
+| `run_test_class` | Run a single test class (or method) and return per-test results | — |
 | `debug_relaunch` | Stop running app and relaunch last (or named) config in debug mode | Ctrl+F2, F11 |
 | `stop_java_application` | Stop all running Java applications | Ctrl+F2 |
 
 ### Maven Integration
 | Tool | Description |
 |------|-------------|
-| `maven_goal` | Execute Maven goals on a project |
+| `maven_goal` | Run Maven goals on a project via an m2e launch (`Run As > Maven build`); blocks and returns exit code, BUILD SUCCESS/FAILURE and output tail. `goals: ["clean"]` = the `Maven clean` launch shortcut |
 | `maven_update_project` | Update Maven project configuration (Alt+F5) |
 
 ## Architecture
@@ -109,7 +111,7 @@ eclipse-mcp/
 │   │   └── com/eclipse/mcp/server/
 │   │       ├── MCPServer.java       # TCP server, JSON-RPC routing
 │   │       ├── handlers/            # MCP message handlers
-│   │       ├── tools/               # Tool implementations (21 tools)
+│   │       ├── tools/               # Tool implementations (22 tools)
 │   │       ├── protocol/            # MCP protocol classes
 │   │       ├── startup/             # Eclipse startup integration
 │   │       └── preferences/         # Preference pages
