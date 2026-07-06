@@ -80,6 +80,7 @@ eclipse-mcp/
 | `analyze_type_dependencies` | Analyze all types referenced by a given type, grouped by package/source, with excluded-package flagging and optional transitive analysis | `ASTParser`, `ASTVisitor`, `ITypeBinding` |
 | `get_problems` | Get compilation errors/warnings for a project | `IMarker.PROBLEM` |
 | `run_tests` | Execute JUnit tests | `JUnitLaunchConfigurationDelegate` |
+| `maven_goal` | Run Maven goals via an m2e launch (Run As > Maven build); blocks until the build finishes, returns exit code + output tail. `goals ["clean"]` = the "Maven clean" launch shortcut | `MavenLaunchConstants`, `ILaunchConfigurationWorkingCopy.launch()` |
 | `maven_update_project` | Refresh Maven project configuration | `IMavenProjectRegistry.refresh()` |
 
 ### Stubs (framework ready, return status messages)
@@ -88,7 +89,6 @@ eclipse-mcp/
 |------|-------------|
 | `source_actions` | Code generation (getters, constructors, toString, hashCode/equals) |
 | `refactor_actions` | Refactoring (rename, extract method/variable, inline, move) |
-| `maven_goal` | Execute Maven goals |
 
 ## Architecture
 
