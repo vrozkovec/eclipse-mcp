@@ -23,7 +23,11 @@
                 <artifactId>tycho-p2-repository-plugin</artifactId>
                 <version>${tycho.version}</version>
                 <configuration>
-                    <includeAllDependencies>true</includeAllDependencies>
+                    <!-- Never bundle the target-platform closure: shipping platform bundles
+                         (asm, spifly, swt.svg, jface, ...) alongside the plugin injects stale
+                         IUs into the installing IDE and breaks its OSGi resolution on boot.
+                         The repository must contain ONLY the MCP feature + plugin. -->
+                    <includeAllDependencies>false</includeAllDependencies>
                 </configuration>
             </plugin>
         </plugins>
