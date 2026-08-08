@@ -16,6 +16,7 @@ import com.eclipse.mcp.server.tools.GetBuildStatusTool;
 import com.eclipse.mcp.server.tools.GetProblemsTool;
 import com.eclipse.mcp.server.tools.ListProjectsTool;
 import com.eclipse.mcp.server.tools.MavenGoalTool;
+import com.eclipse.mcp.server.tools.MavenImportProjectTool;
 import com.eclipse.mcp.server.tools.MavenUpdateProjectTool;
 import com.eclipse.mcp.server.tools.OrganizeImportsTool;
 import com.eclipse.mcp.server.tools.RefactorActionsTool;
@@ -51,6 +52,7 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("refactor_actions", new RefactorActionsTool());
         tools.put("maven_goal", new MavenGoalTool());
         tools.put("maven_update_project", new MavenUpdateProjectTool());
+        tools.put("maven_import_project", new MavenImportProjectTool());
         tools.put("find_references", new FindReferencesTool());
         tools.put("analyze_type_dependencies", new AnalyzeTypeDependenciesTool());
         tools.put("clean_workspace", new CleanWorkspaceTool());

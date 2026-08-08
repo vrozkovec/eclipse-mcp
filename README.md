@@ -4,7 +4,7 @@ An Eclipse plugin that provides MCP (Model Context Protocol) server functionalit
 
 ## Features
 
-This plugin exposes **22 tools** through the MCP protocol, covering code search, workspace management, code quality, application lifecycle, and Maven integration.
+This plugin exposes **23 tools** through the MCP protocol, covering code search, workspace management, code quality, application lifecycle, and Maven integration.
 
 ### Search & Navigation
 | Tool | Description | Eclipse Equivalent |
@@ -51,6 +51,7 @@ This plugin exposes **22 tools** through the MCP protocol, covering code search,
 |------|-------------|
 | `maven_goal` | Run Maven goals on a project via an m2e launch (`Run As > Maven build`); blocks and returns exit code, BUILD SUCCESS/FAILURE and output tail. `goals: ["clean"]` = the `Maven clean` launch shortcut |
 | `maven_update_project` | Update Maven project configuration (Alt+F5) |
+| `maven_import_project` | Import an existing Maven project (single or multi-module) from a filesystem path; scans recursively, imports all nested modules, skips already-imported projects (File > Import > Existing Maven Projects) |
 
 ## Architecture
 
@@ -111,7 +112,7 @@ eclipse-mcp/
 │   │   └── com/eclipse/mcp/server/
 │   │       ├── MCPServer.java       # TCP server, JSON-RPC routing
 │   │       ├── handlers/            # MCP message handlers
-│   │       ├── tools/               # Tool implementations (22 tools)
+│   │       ├── tools/               # Tool implementations (23 tools)
 │   │       ├── protocol/            # MCP protocol classes
 │   │       ├── startup/             # Eclipse startup integration
 │   │       └── preferences/         # Preference pages

@@ -214,7 +214,28 @@ public class ToolsListHandler implements MCPRequestHandler {
                 "required", List.of("projectName")
             )
         ));
-        
+
+        tools.add(createTool(
+            "maven_import_project",
+            "Import an existing Maven project from a filesystem path into the workspace — the headless "
+                + "equivalent of File > Import > Existing Maven Projects. Scans the directory recursively for "
+                + "pom.xml files and imports the project including all nested modules of a multi-module build. "
+                + "Projects already in the workspace (same location) are skipped. Blocks until the import "
+                + "finishes — a first import may take minutes while dependencies resolve; Eclipse may keep "
+                + "building afterwards (poll with get_build_status). Returns per-project entries with status "
+                + "imported, skipped_existing, or not_imported.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "path", Map.of(
+                        "type", "string",
+                        "description", "Absolute filesystem path to the project directory to scan, or to a pom.xml file (its parent directory is used)"
+                    )
+                ),
+                "required", List.of("path")
+            )
+        ));
+
         tools.add(createTool(
             "find_references",
             "Find all references to a Java element (type, method, or field) across the workspace. Equivalent to Ctrl+Shift+G in Eclipse.",

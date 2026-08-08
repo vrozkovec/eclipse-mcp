@@ -68,7 +68,7 @@ eclipse-mcp/
 └── pom.xml                          # Parent POM (Tycho reactor)
 ```
 
-## MCP Tools (10 total)
+## MCP Tools (11 total)
 
 ### Fully implemented
 
@@ -82,6 +82,7 @@ eclipse-mcp/
 | `run_tests` | Execute JUnit tests | `JUnitLaunchConfigurationDelegate` |
 | `maven_goal` | Run Maven goals via an m2e launch (Run As > Maven build); blocks until the build finishes, returns exit code + output tail. `goals ["clean"]` = the "Maven clean" launch shortcut | `MavenLaunchConstants`, `ILaunchConfigurationWorkingCopy.launch()` |
 | `maven_update_project` | Refresh Maven project configuration | `IMavenProjectRegistry.refresh()` |
+| `maven_import_project` | Import existing Maven project(s) from a path — recursive scan, nested modules, skips already-imported projects (File > Import > Existing Maven Projects) | `LocalProjectScanner`, `IProjectConfigurationManager.importProjects()` |
 
 ### Stubs (framework ready, return status messages)
 
