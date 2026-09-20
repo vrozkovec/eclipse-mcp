@@ -51,7 +51,10 @@ eclipse-mcp/
 │       │   ├── GetProblemsTool.java           # Project error/warning markers
 │       │   ├── RunTestsTool.java              # JUnit test execution
 │       │   ├── SourceActionsTool.java         # Code generation (Alt+Shift+S) [stub]
-│       │   ├── RefactorActionsTool.java       # Refactoring (Alt+Shift+T) [stub]
+│       │   ├── RenameElementTool.java         # Rename type/method/field (Alt+Shift+R)
+│       │   ├── MoveElementTool.java           # Move class to another package (Alt+Shift+V)
+│       │   ├── JavaElementSelector.java       # Resolves 'pkg.Type#member' selectors to JDT elements
+│       │   ├── RefactoringRunner.java         # Shared LTK run sequence (conditions -> change -> perform)
 │       │   ├── MavenGoalTool.java             # Maven goal execution [stub]
 │       │   └── MavenUpdateProjectTool.java    # Maven project refresh
 │       ├── protocol/
@@ -83,13 +86,14 @@ eclipse-mcp/
 | `maven_goal` | Run Maven goals via an m2e launch (Run As > Maven build); blocks until the build finishes, returns exit code + output tail. `goals ["clean"]` = the "Maven clean" launch shortcut | `MavenLaunchConstants`, `ILaunchConfigurationWorkingCopy.launch()` |
 | `maven_update_project` | Refresh Maven project configuration | `IMavenProjectRegistry.refresh()` |
 | `maven_import_project` | Import existing Maven project(s) from a path — recursive scan, nested modules, skips already-imported projects (File > Import > Existing Maven Projects) | `LocalProjectScanner`, `IProjectConfigurationManager.importProjects()` |
+| `rename_element` | Rename a type, method or field; updates references workspace-wide and renames the `.java` file for a top-level type (Alt+Shift+R) | `RenameJavaElementDescriptor`, `IJavaRefactorings` |
+| `move_element` | Move a class to another package; rewrites the package declaration and fixes imports workspace-wide (Alt+Shift+V) | `MoveDescriptor`, LTK `Refactoring` |
 
 ### Stubs (framework ready, return status messages)
 
 | Tool | Description |
 |------|-------------|
 | `source_actions` | Code generation (getters, constructors, toString, hashCode/equals) |
-| `refactor_actions` | Refactoring (rename, extract method/variable, inline, move) |
 
 ## Architecture
 

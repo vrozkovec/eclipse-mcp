@@ -147,26 +147,68 @@ public class ToolsListHandler implements MCPRequestHandler {
         ));
         
         tools.add(createTool(
-            "refactor_actions",
-            "Execute Eclipse refactoring actions (Alt+Shift+T equivalent)",
+            "rename_element",
+            "Rename a Java type, method or field using Eclipse's refactoring engine (Alt+Shift+R equivalent). Updates references across the whole workspace; renaming a top-level type renames its .java file too. Use rename_package for packages.",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
-                    "filePath", Map.of(
+                    "element", Map.of(
                         "type", "string",
-                        "description", "Path to the Java file"
+                        "description", "Selector for the element to rename. A fully qualified type ('com.example.Bar'), a nested type ('com.example.Bar.Inner'), or a member ('com.example.Bar#doWork', 'com.example.Bar#count'). Overloaded methods need an explicit parameter list: 'com.example.Bar#doWork(String,int)'. Simple type names are not accepted - resolve them with find_type first."
                     ),
-                    "action", Map.of(
+                    "newName", Map.of(
                         "type", "string",
-                        "description", "Refactoring action to perform",
-                        "enum", List.of("rename", "extract_method", "extract_variable", "inline", "move")
+                        "description", "New simple name for the element (not qualified), e.g. 'execute'"
                     ),
-                    "parameters", Map.of(
-                        "type", "object",
-                        "description", "Parameters for the refactoring action"
+                    "projectName", Map.of(
+                        "type", "string",
+                        "description", "Name of the Eclipse project containing the element. If omitted, all workspace projects are searched."
+                    ),
+                    "updateReferences", Map.of(
+                        "type", "boolean",
+                        "description", "Whether to update references to the element across the workspace",
+                        "default", true
+                    ),
+                    "updateTextualOccurrences", Map.of(
+                        "type", "boolean",
+                        "description", "Whether to also update matches found in comments and string literals",
+                        "default", false
                     )
                 ),
-                "required", List.of("filePath", "action")
+                "required", List.of("element", "newName")
+            )
+        ));
+
+        tools.add(createTool(
+            "move_element",
+            "Move a Java class to another package using Eclipse's refactoring engine (Alt+Shift+V equivalent). Moves the .java file, rewrites its package declaration, and updates imports and references across the workspace. The destination is resolved within the same source folder as the class being moved; moving between projects is not supported.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "element", Map.of(
+                        "type", "string",
+                        "description", "Fully qualified name of the top-level class to move, e.g. 'com.example.Bar'. Nested types cannot be moved directly."
+                    ),
+                    "destination", Map.of(
+                        "type", "string",
+                        "description", "Fully qualified name of the destination package, e.g. 'com.example.util'"
+                    ),
+                    "projectName", Map.of(
+                        "type", "string",
+                        "description", "Name of the Eclipse project containing the class. If omitted, all workspace projects are searched."
+                    ),
+                    "updateReferences", Map.of(
+                        "type", "boolean",
+                        "description", "Whether to update references to the class across the workspace",
+                        "default", true
+                    ),
+                    "createDestination", Map.of(
+                        "type", "boolean",
+                        "description", "Create the destination package if it does not exist. Off by default so that a mistyped package name is reported rather than silently created.",
+                        "default", false
+                    )
+                ),
+                "required", List.of("element", "destination")
             )
         ));
         
