@@ -1,9 +1,12 @@
 package com.eclipse.mcp.server.tools;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -13,23 +16,31 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.ui.IDebugUIConstants;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.ui.PlatformUI;
 
 /**
- * Stops any currently running program and relaunches the most recently used
- * launch configuration in debug mode.
+ * Relaunches a launch configuration in debug mode: the most recently launched one, or the one
+ * named by {@code configurationName}.
  *
- * <p>Only Java application launches are terminated — external tools, remote debug
- * sessions, and other non-Java launches are left untouched.</p>
+ * <p>Before launching, the running Java launches selected by {@code terminate} are stopped: by
+ * default only the running instances of the relaunched configuration, so other applications keep
+ * running; {@code all} stops every Java application except attached remote debug sessions, and
+ * {@code none} starts the new launch alongside. External tools and other non-Java launches are
+ * never touched. Without {@code configurationName} the call is refused while applications of
+ * several configurations are running, because the most recently launched one may then belong to
+ * another session.</p>
  *
- * <p>Optional per-run overrides ({@code vmArguments}, {@code programArguments},
- * {@code environment}) are applied to an unsaved working copy of the configuration, so
- * they affect this launch only: the saved configuration is never modified, and a later
- * relaunch without overrides uses the saved settings again.</p>
+ * <p>Every launch runs an unsaved working copy of the configuration, so the saved configuration is
+ * never modified. The working copy writes the console output to a fresh per-launch log file
+ * ({@link LaunchLogs}), returned as {@code logFile}, and carries the optional one-off overrides
+ * ({@code vmArguments}, {@code programArguments}, {@code environment}). Eclipse's launch history
+ * ignores working copies, so these launches do not change what F11 or the Run History menu
+ * launch.</p>
  *
- * <p>Equivalent to manually terminating Java processes (Ctrl+F2)
- * and then pressing F11 (Debug Last Launched) in Eclipse.</p>
+ * <p>Equivalent to terminating the application (Ctrl+F2) and pressing F11 (Debug Last Launched)
+ * in Eclipse.</p>
  */
 public class DebugRelaunchTool implements Tool {
 
@@ -37,26 +48,28 @@ public class DebugRelaunchTool implements Tool {
     public Object execute(Map<String, Object> arguments) throws Exception {
         // Validated before the UI-thread call so bad input surfaces as a plain error message
         RunOverrides overrides = RunOverrides.from(arguments);
+        TerminateScope terminateScope = TerminateScope.from(arguments);
         return PlatformUI.getWorkbench().getDisplay().syncCall(() -> {
             try {
-                return stopAndRelaunchDebug(arguments, overrides);
+                return stopAndRelaunchDebug(arguments, overrides, terminateScope);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    private Map<String, Object> stopAndRelaunchDebug(Map<String, Object> arguments, RunOverrides overrides)
-            throws Exception {
+    private Map<String, Object> stopAndRelaunchDebug(Map<String, Object> arguments, RunOverrides overrides,
+            TerminateScope terminateScope) throws Exception {
         ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
         ILaunch[] launches = manager.getLaunches();
+        List<ILaunch> running = JavaLaunches.running();
 
         // Find the most recent Java launch configuration from launch history.
         // getLaunches() includes both active and terminated launches from the session,
         // ordered by creation time — the last entry with a config is the most recent.
         ILaunchConfiguration lastConfig = null;
         for (ILaunch launch : launches) {
-            if (launch.getLaunchConfiguration() != null && isJavaLaunch(launch)) {
+            if (launch.getLaunchConfiguration() != null && JavaLaunches.isJavaLaunch(launch)) {
                 lastConfig = savedConfiguration(launch.getLaunchConfiguration());
             }
         }
@@ -80,6 +93,14 @@ public class DebugRelaunchTool implements Tool {
                 return error;
             }
             lastConfig = found;
+        } else if (running.stream().map(JavaLaunches::configurationName).distinct().count() > 1) {
+            // The most recently launched configuration may be another session's application
+            Map<String, Object> error = new HashMap<>();
+            error.put("status", "error");
+            error.put("error", "Applications of several launch configurations are running; specify configurationName.");
+            error.put("stillRunning", describe(running));
+            error.put("availableConfigurations", getConfigurationNames(manager));
+            return error;
         }
 
         if (lastConfig == null || !lastConfig.exists()) {
@@ -90,42 +111,49 @@ public class DebugRelaunchTool implements Tool {
             return error;
         }
 
-        // Terminate only active Java launches — leave external tools and other launches alone
-        List<String> terminated = new ArrayList<>();
-        for (ILaunch launch : launches) {
-            if (!launch.isTerminated() && isJavaLaunch(launch)) {
-                String label = launch.getLaunchConfiguration() != null
-                        ? launch.getLaunchConfiguration().getName()
-                        : "unknown";
-                launch.terminate();
-                terminated.add(label);
+        // Terminate the selected Java launches and clear terminated ones from the debug view
+        List<ILaunch> toTerminate = terminateScope.select(running, lastConfig.getName());
+        List<String> terminated = JavaLaunches.terminate(toTerminate);
+        JavaLaunches.removeTerminated();
+        // Computed rather than queried: terminate() can return before isTerminated() flips
+        List<ILaunch> stillRunning = new ArrayList<>(running);
+        stillRunning.removeAll(toTerminate);
+
+        // Relaunch in debug mode from an unsaved working copy carrying this run's log file and
+        // overrides. A remote debug session starts no process, so it gets no log file.
+        ILaunchConfigurationWorkingCopy workingCopy = lastConfig.getWorkingCopy();
+        overrides.applyTo(workingCopy);
+        Path logFile = null;
+        String logFileError = null;
+        if (!JavaLaunches.isRemoteDebugConfiguration(lastConfig)) {
+            try {
+                logFile = LaunchLogs.newLogFile(lastConfig.getName());
+                workingCopy.setAttribute(IDebugUIConstants.ATTR_CAPTURE_IN_FILE, logFile.toString());
+                workingCopy.setAttribute(IDebugUIConstants.ATTR_APPEND_TO_FILE, false);
+            } catch (IOException e) {
+                // Launch anyway; the console output then goes where the configuration says
+                logFileError = e.toString();
             }
         }
-
-        // Remove terminated Java launches from the debug view
-        ILaunch[] currentLaunches = manager.getLaunches();
-        List<ILaunch> toRemove = new ArrayList<>();
-        for (ILaunch launch : currentLaunches) {
-            if (launch.isTerminated() && isJavaLaunch(launch)) {
-                toRemove.add(launch);
-            }
+        ILaunch newLaunch = workingCopy.launch(ILaunchManager.DEBUG_MODE, new NullProgressMonitor());
+        if (logFile != null) {
+            LaunchLogs.prune(logFilesInUse(logFile, stillRunning));
         }
-        if (!toRemove.isEmpty()) {
-            manager.removeLaunches(toRemove.toArray(new ILaunch[0]));
-        }
-
-        // Relaunch in debug mode
-        var monitor = new NullProgressMonitor();
-        ILaunchConfiguration toLaunch = overrides.isEmpty() ? lastConfig : overrides.applyTo(lastConfig);
-        ILaunch newLaunch = toLaunch.launch(ILaunchManager.DEBUG_MODE, monitor);
 
         Map<String, Object> result = new HashMap<>();
         result.put("status", "launched");
+        result.put("terminate", terminateScope.argumentValue());
         result.put("terminatedCount", terminated.size());
         result.put("terminatedLaunches", terminated);
         result.put("launchConfiguration", lastConfig.getName());
         result.put("launchMode", ILaunchManager.DEBUG_MODE);
         result.put("launchType", lastConfig.getType().getName());
+        if (logFile != null) {
+            result.put("logFile", logFile.toString());
+        }
+        if (logFileError != null) {
+            result.put("logFileError", logFileError);
+        }
         if (!overrides.isEmpty()) {
             result.put("overrides", overrides.describe());
         }
@@ -137,27 +165,9 @@ public class DebugRelaunchTool implements Tool {
             }
         }
         result.put("processes", processes);
+        result.put("stillRunning", describe(stillRunning));
 
         return result;
-    }
-
-    private static final String JAVA_LAUNCH_PREFIX = "org.eclipse.jdt.launching.";
-    private static final String JUNIT_LAUNCH_TYPE = "org.eclipse.jdt.junit.launchconfig";
-
-    /**
-     * Checks whether a launch is a Java application (local Java app, JUnit, etc.).
-     */
-    private boolean isJavaLaunch(ILaunch launch) {
-        try {
-            ILaunchConfiguration config = launch.getLaunchConfiguration();
-            if (config == null) {
-                return false;
-            }
-            String typeId = config.getType().getIdentifier();
-            return typeId.startsWith(JAVA_LAUNCH_PREFIX) || typeId.equals(JUNIT_LAUNCH_TYPE);
-        } catch (CoreException e) {
-            return false;
-        }
     }
 
     /**
@@ -171,16 +181,95 @@ public class DebugRelaunchTool implements Tool {
         return names;
     }
 
+    private static List<Map<String, Object>> describe(List<ILaunch> launches) {
+        return launches.stream().map(JavaLaunches::describe).toList();
+    }
+
     /**
-     * Returns the saved configuration behind a launch. A launch started with per-run overrides
-     * runs an unsaved working copy; relaunching must go back to the saved original so that
-     * the overrides do not stick.
+     * Returns the log files that pruning must keep: the new launch's and those of the applications
+     * that are still running.
+     */
+    private static List<Path> logFilesInUse(Path newLogFile, List<ILaunch> stillRunning) {
+        List<Path> inUse = new ArrayList<>();
+        inUse.add(newLogFile);
+        for (ILaunch launch : stillRunning) {
+            String file = JavaLaunches.logFile(launch.getLaunchConfiguration());
+            if (file != null) {
+                inUse.add(Path.of(file));
+            }
+        }
+        return inUse;
+    }
+
+    /**
+     * Returns the saved configuration behind a launch. A launch started by this tool runs an unsaved
+     * working copy; relaunching must go back to the saved original so that the previous run's log
+     * file and overrides do not stick.
      */
     private static ILaunchConfiguration savedConfiguration(ILaunchConfiguration config) {
         if (config instanceof ILaunchConfigurationWorkingCopy workingCopy && workingCopy.getOriginal() != null) {
             return workingCopy.getOriginal();
         }
         return config;
+    }
+
+    /**
+     * Which running Java launches are stopped before the relaunch.
+     */
+    private enum TerminateScope {
+
+        /** The running instances of the relaunched configuration — the default. */
+        SAME,
+
+        /** Every running Java launch except remote debug sessions. */
+        ALL,
+
+        /** Nothing: the new launch runs alongside the others. */
+        NONE;
+
+        /**
+         * Reads the optional {@code terminate} tool argument; absent or blank means {@link #SAME}.
+         *
+         * @throws IllegalArgumentException if it is not one of {@code same}, {@code all}, {@code none}
+         */
+        static TerminateScope from(Map<String, Object> arguments) {
+            Object value = arguments.get("terminate");
+            if (value == null || value instanceof String string && string.isBlank()) {
+                return SAME;
+            }
+            for (TerminateScope scope : values()) {
+                if (scope.argumentValue().equals(value)) {
+                    return scope;
+                }
+            }
+            throw new IllegalArgumentException("terminate must be one of \"same\", \"all\" or \"none\"");
+        }
+
+        /**
+         * Selects the running launches to terminate.
+         *
+         * @param running           the running Java launches
+         * @param configurationName name of the configuration being relaunched
+         * @return the launches to terminate
+         */
+        List<ILaunch> select(List<ILaunch> running, String configurationName) {
+            return switch (this) {
+                case SAME -> running.stream()
+                        .filter(launch -> configurationName.equals(JavaLaunches.configurationName(launch)))
+                        .toList();
+                case ALL -> running.stream()
+                        .filter(launch -> !JavaLaunches.isRemoteDebugSession(launch))
+                        .toList();
+                case NONE -> List.of();
+            };
+        }
+
+        /**
+         * Returns the tool argument value of this scope, e.g. {@code "same"}.
+         */
+        String argumentValue() {
+            return name().toLowerCase(Locale.ROOT);
+        }
     }
 
     /**
@@ -210,12 +299,10 @@ public class DebugRelaunchTool implements Tool {
         }
 
         /**
-         * Creates a working copy of the configuration with the overrides applied. The copy is
-         * deliberately never saved: the .launch file stays untouched, and Eclipse's launch
-         * history ignores working copies, so F11 keeps launching the saved configuration.
+         * Applies the overrides to a working copy of the configuration. The copy is deliberately
+         * never saved, so the .launch file stays untouched.
          */
-        ILaunchConfiguration applyTo(ILaunchConfiguration config) throws CoreException {
-            ILaunchConfigurationWorkingCopy workingCopy = config.getWorkingCopy();
+        void applyTo(ILaunchConfigurationWorkingCopy workingCopy) throws CoreException {
             append(workingCopy, IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, vmArguments);
             append(workingCopy, IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, programArguments);
             if (!environment.isEmpty()) {
@@ -224,7 +311,6 @@ public class DebugRelaunchTool implements Tool {
                 merged.putAll(environment);
                 workingCopy.setAttribute(ILaunchManager.ATTR_ENVIRONMENT_VARIABLES, merged);
             }
-            return workingCopy;
         }
 
         /**

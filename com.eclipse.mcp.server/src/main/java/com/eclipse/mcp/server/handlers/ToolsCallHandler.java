@@ -15,6 +15,7 @@ import com.eclipse.mcp.server.tools.FormatCodeTool;
 import com.eclipse.mcp.server.tools.GetBuildStatusTool;
 import com.eclipse.mcp.server.tools.GetProblemsTool;
 import com.eclipse.mcp.server.tools.ListProjectsTool;
+import com.eclipse.mcp.server.tools.ListRunningApplicationsTool;
 import com.eclipse.mcp.server.tools.MavenGoalTool;
 import com.eclipse.mcp.server.tools.MavenImportProjectTool;
 import com.eclipse.mcp.server.tools.MavenUpdateProjectTool;
@@ -62,6 +63,7 @@ public class ToolsCallHandler implements MCPRequestHandler {
         tools.put("debug_relaunch", new DebugRelaunchTool());
         tools.put("get_build_status", new GetBuildStatusTool());
         tools.put("stop_java_application", new StopJavaApplicationTool());
+        tools.put("list_running_applications", new ListRunningApplicationsTool());
         tools.put("list_projects", new ListProjectsTool());
         tools.put("resolve_project", new ResolveProjectTool());
         tools.put("format_code", new FormatCodeTool());

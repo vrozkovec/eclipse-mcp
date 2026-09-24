@@ -5,84 +5,81 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.ui.PlatformUI;
 
 /**
- * Stops all currently running Java applications in the workspace.
+ * Stops running Java applications in the workspace: all of them, or the running instances of one
+ * launch configuration ({@code configurationName}).
  *
- * <p>Only Java application launches are terminated — external tools, remote debug
- * sessions, and other non-Java launches are left untouched. Equivalent to
- * selecting all Java processes and pressing Ctrl+F2 (Terminate) in Eclipse.</p>
+ * <p>Only Java launches (local Java applications, JUnit runs) are terminated — external tools, Maven
+ * builds and other non-Java launches are left untouched. A remote debug session attaches to a VM that
+ * Eclipse did not start: stopping everything leaves it attached, and naming its configuration
+ * disconnects it (or terminates the remote VM, if the configuration allows that).</p>
+ *
+ * <p>Equivalent to selecting the Java processes and pressing Ctrl+F2 (Terminate) in Eclipse. As
+ * there, stopped launches stay in the Debug view: their consoles remain readable, and
+ * {@code debug_relaunch} still finds the most recently launched configuration.</p>
  */
 public class StopJavaApplicationTool implements Tool {
 
-    private static final String JAVA_LAUNCH_PREFIX = "org.eclipse.jdt.launching.";
-    private static final String JUNIT_LAUNCH_TYPE = "org.eclipse.jdt.junit.launchconfig";
-
     @Override
     public Object execute(Map<String, Object> arguments) throws Exception {
+        // Validated before the UI-thread call so bad input surfaces as a plain error message
+        String configurationName = optionalConfigurationName(arguments);
         return PlatformUI.getWorkbench().getDisplay().syncCall(() -> {
             try {
-                return stopJavaApplications();
+                return stopJavaApplications(configurationName);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    private Map<String, Object> stopJavaApplications() throws Exception {
-        ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
-        ILaunch[] launches = manager.getLaunches();
+    private Map<String, Object> stopJavaApplications(String configurationName) throws Exception {
+        List<ILaunch> running = JavaLaunches.running();
+        List<ILaunch> toStop = running.stream()
+                .filter(launch -> configurationName == null
+                        ? !JavaLaunches.isRemoteDebugSession(launch)
+                        : configurationName.equals(JavaLaunches.configurationName(launch)))
+                .toList();
+        List<String> terminated = JavaLaunches.terminate(toStop);
 
-        // Terminate only active Java launches
-        List<String> terminated = new ArrayList<>();
-        for (ILaunch launch : launches) {
-            if (!launch.isTerminated() && isJavaLaunch(launch)) {
-                String label = launch.getLaunchConfiguration() != null
-                        ? launch.getLaunchConfiguration().getName()
-                        : "unknown";
-                launch.terminate();
-                terminated.add(label);
-            }
-        }
-
-        // Remove terminated Java launches from the debug view
-        ILaunch[] currentLaunches = manager.getLaunches();
-        List<ILaunch> toRemove = new ArrayList<>();
-        for (ILaunch launch : currentLaunches) {
-            if (launch.isTerminated() && isJavaLaunch(launch)) {
-                toRemove.add(launch);
-            }
-        }
-        if (!toRemove.isEmpty()) {
-            manager.removeLaunches(toRemove.toArray(new ILaunch[0]));
-        }
+        // Computed rather than queried: terminate() can return before isTerminated() flips
+        List<ILaunch> stillRunning = new ArrayList<>(running);
+        stillRunning.removeAll(toStop);
 
         Map<String, Object> result = new HashMap<>();
-        result.put("status", terminated.isEmpty() ? "no_java_applications_running" : "terminated");
+        result.put("status", status(configurationName, terminated));
+        if (configurationName != null) {
+            result.put("configurationName", configurationName);
+        }
         result.put("terminatedCount", terminated.size());
         result.put("terminatedLaunches", terminated);
+        result.put("stillRunning", stillRunning.stream().map(JavaLaunches::describe).toList());
         return result;
     }
 
-    /**
-     * Checks whether a launch is a Java application (local Java app, JUnit, etc.).
-     */
-    private boolean isJavaLaunch(ILaunch launch) {
-        try {
-            ILaunchConfiguration config = launch.getLaunchConfiguration();
-            if (config == null) {
-                return false;
-            }
-            String typeId = config.getType().getIdentifier();
-            return typeId.startsWith(JAVA_LAUNCH_PREFIX) || typeId.equals(JUNIT_LAUNCH_TYPE);
-        } catch (CoreException e) {
-            return false;
+    private static String status(String configurationName, List<String> terminated) {
+        if (!terminated.isEmpty()) {
+            return "terminated";
         }
+        return configurationName != null ? "not_running" : "no_java_applications_running";
+    }
+
+    /**
+     * Reads the optional {@code configurationName} argument; a blank name counts as absent.
+     *
+     * @throws IllegalArgumentException if it is not a string
+     */
+    private static String optionalConfigurationName(Map<String, Object> arguments) {
+        Object value = arguments.get("configurationName");
+        if (value == null) {
+            return null;
+        }
+        if (!(value instanceof String name)) {
+            throw new IllegalArgumentException("configurationName must be a string");
+        }
+        return name.isBlank() ? null : name;
     }
 }

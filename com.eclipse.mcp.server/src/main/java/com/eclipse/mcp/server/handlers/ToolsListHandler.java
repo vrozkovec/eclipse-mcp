@@ -392,16 +392,27 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "debug_relaunch",
-            "Stop any currently running program and relaunch the most recently used launch configuration in debug mode. "
-                + "Equivalent to Ctrl+F2 (Terminate) followed by F11 (Debug Last Launched). Optionally specify a launch "
-                + "configuration by name, and one-off vmArguments / programArguments / environment for this launch only: "
-                + "the saved launch configuration is never modified, and a later relaunch without them uses the saved settings again.",
+            "Relaunch a launch configuration in debug mode: the most recently launched one, or configurationName. "
+                + "Equivalent to Ctrl+F2 (Terminate) followed by F11 (Debug Last Launched). By default it first stops only the "
+                + "running instances of that configuration, so other Java applications keep running (see terminate). "
+                + "Each launch writes its console output to its own new file, returned as logFile: read that file, not the "
+                + "configuration's Output File. Optional one-off vmArguments / programArguments / environment apply to this "
+                + "launch only. The saved launch configuration is never modified: the tool launches an unsaved copy of it, "
+                + "which also means the launch is not added to Eclipse's launch history (F11, Run History).",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
                     "configurationName", Map.of(
                         "type", "string",
-                        "description", "Name of a specific launch configuration to use. If omitted, the most recently launched configuration is used."
+                        "description", "Name of a specific launch configuration to use. If omitted, the most recently launched "
+                            + "configuration is used; the call is then refused while applications of several configurations are running."
+                    ),
+                    "terminate", Map.of(
+                        "type", "string",
+                        "enum", List.of("same", "all", "none"),
+                        "description", "Which running Java applications to stop before launching: 'same' (default) stops the running "
+                            + "instances of the relaunched configuration; 'all' stops every running Java application except attached "
+                            + "remote debug sessions; 'none' starts alongside them, e.g. a second instance with vmArguments '-Dport=8081'."
                     ),
                     "vmArguments", Map.of(
                         "type", "string",
@@ -434,7 +445,28 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "stop_java_application",
-            "Stop all currently running Java applications. Only terminates Java launches (local apps, JUnit) — external tools and other non-Java launches are left untouched. Equivalent to Ctrl+F2 (Terminate) for Java processes.",
+            "Stop running Java applications (local apps, JUnit runs): all of them, or only the running instances of one launch "
+                + "configuration. External tools and other non-Java launches are left untouched; stopping all also leaves attached "
+                + "remote debug sessions attached. Equivalent to Ctrl+F2 (Terminate): stopped launches stay in the Debug view, so "
+                + "debug_relaunch can still relaunch them. The result lists the applications that are still running.",
+            Map.of(
+                "type", "object",
+                "properties", Map.of(
+                    "configurationName", Map.of(
+                        "type", "string",
+                        "description", "Name of the launch configuration whose running instances to stop (exact match, as listed by "
+                            + "list_running_applications). If omitted, all running Java applications are stopped."
+                    )
+                )
+            )
+        ));
+
+        tools.add(createTool(
+            "list_running_applications",
+            "List the Java applications currently running from Eclipse (local apps, JUnit runs, remote debug sessions) without "
+                + "starting or stopping anything. Each entry has configurationName, launchType, launchMode (run/debug), pid, "
+                + "launchedAt and logFile, the file its console output is written to. Pass configurationName to "
+                + "stop_java_application or debug_relaunch.",
             Map.of(
                 "type", "object",
                 "properties", Map.of()

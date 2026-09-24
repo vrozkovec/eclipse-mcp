@@ -4,7 +4,7 @@ An Eclipse plugin that provides MCP (Model Context Protocol) server functionalit
 
 ## Features
 
-This plugin exposes **23 tools** through the MCP protocol, covering code search, workspace management, code quality, application lifecycle, and Maven integration.
+This plugin exposes **25 tools** through the MCP protocol, covering code search, workspace management, code quality, application lifecycle, and Maven integration.
 
 ### Search & Navigation
 | Tool | Description | Eclipse Equivalent |
@@ -35,7 +35,8 @@ This plugin exposes **23 tools** through the MCP protocol, covering code search,
 | Tool | Description | Eclipse Equivalent |
 |------|-------------|--------------------|
 | `source_actions` | Generate getters/setters, constructors, toString, hashCode/equals | Alt+Shift+S |
-| `refactor_actions` | Rename, extract method/variable, inline, move | Alt+Shift+T |
+| `rename_element` | Rename a type, method or field; updates references workspace-wide and renames the `.java` file of a top-level type | Alt+Shift+R |
+| `move_element` | Move a class to another package; rewrites the package declaration and fixes imports workspace-wide | Alt+Shift+V |
 | `rename_package` | Rename a package across the workspace | Refactor > Rename |
 
 ### Application Lifecycle
@@ -43,8 +44,11 @@ This plugin exposes **23 tools** through the MCP protocol, covering code search,
 |------|-------------|--------------------|
 | `run_tests` | Run JUnit tests for a project, package, or class | — |
 | `run_test_class` | Run a single test class (or method) and return per-test results | — |
-| `debug_relaunch` | Stop running app and relaunch last (or named) config in debug mode. Optional one-off `vmArguments` / `programArguments` (appended) and `environment` (merged) apply to that run only; the saved config is never modified | Ctrl+F2, F11 |
-| `stop_java_application` | Stop all running Java applications | Ctrl+F2 |
+| `debug_relaunch` | Relaunch the last (or named) config in debug mode. First stops only the running instances of that config (`terminate`: `same` by default, `all`, `none`); without a name it refuses while apps of several configs run. Each launch logs to its own file, returned as `logFile`. Optional one-off `vmArguments` / `programArguments` (appended) and `environment` (merged) apply to that run only; the saved config is never modified | Ctrl+F2, F11 |
+| `stop_java_application` | Stop all running Java applications, or only the instances of one `configurationName`. Stopping all leaves attached remote debug sessions alone; stopped launches stay in the Debug view | Ctrl+F2 |
+| `list_running_applications` | List running Java applications: configuration name, launch type and mode, PID, start time and log file | Debug view |
+
+`debug_relaunch` points each launch's console output at a fresh `/data/tmp/eclipse/eclipse-java-app-<yyyyMMdd-HHmmss>-<config>.log` instead of the configuration's own Output File, so apps running side by side never share a log. The newest 20 of these files are kept; logs of running apps are never deleted.
 
 ### Maven Integration
 | Tool | Description |
@@ -112,7 +116,7 @@ eclipse-mcp/
 │   │   └── com/eclipse/mcp/server/
 │   │       ├── MCPServer.java       # TCP server, JSON-RPC routing
 │   │       ├── handlers/            # MCP message handlers
-│   │       ├── tools/               # Tool implementations (23 tools)
+│   │       ├── tools/               # Tool implementations (25 tools)
 │   │       ├── protocol/            # MCP protocol classes
 │   │       ├── startup/             # Eclipse startup integration
 │   │       └── preferences/         # Preference pages
