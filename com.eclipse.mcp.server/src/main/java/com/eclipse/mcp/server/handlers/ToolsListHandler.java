@@ -392,13 +392,32 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "debug_relaunch",
-            "Stop any currently running program and relaunch the most recently used launch configuration in debug mode. Equivalent to Ctrl+F2 (Terminate) followed by F11 (Debug Last Launched). Optionally specify a launch configuration by name.",
+            "Stop any currently running program and relaunch the most recently used launch configuration in debug mode. "
+                + "Equivalent to Ctrl+F2 (Terminate) followed by F11 (Debug Last Launched). Optionally specify a launch "
+                + "configuration by name, and one-off vmArguments / programArguments / environment for this launch only: "
+                + "the saved launch configuration is never modified, and a later relaunch without them uses the saved settings again.",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
                     "configurationName", Map.of(
                         "type", "string",
                         "description", "Name of a specific launch configuration to use. If omitted, the most recently launched configuration is used."
+                    ),
+                    "vmArguments", Map.of(
+                        "type", "string",
+                        "description", "Extra JVM arguments for this launch only, appended after the configuration's own VM arguments, "
+                            + "e.g. '-Dport=8081 -Xmx2g'. The JVM honours the last occurrence of a -D or -X option, so this also "
+                            + "overrides values set in the configuration. Eclipse variables such as ${workspace_loc} are expanded."
+                    ),
+                    "programArguments", Map.of(
+                        "type", "string",
+                        "description", "Extra program arguments for this launch only, appended after the configuration's own program arguments."
+                    ),
+                    "environment", Map.of(
+                        "type", "object",
+                        "additionalProperties", Map.of("type", "string"),
+                        "description", "Environment variables for this launch only, e.g. {\"FOO\": \"bar\"}. Added to the configuration's own, "
+                            + "replacing variables of the same name."
                     )
                 )
             )

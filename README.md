@@ -43,7 +43,7 @@ This plugin exposes **23 tools** through the MCP protocol, covering code search,
 |------|-------------|--------------------|
 | `run_tests` | Run JUnit tests for a project, package, or class | — |
 | `run_test_class` | Run a single test class (or method) and return per-test results | — |
-| `debug_relaunch` | Stop running app and relaunch last (or named) config in debug mode | Ctrl+F2, F11 |
+| `debug_relaunch` | Stop running app and relaunch last (or named) config in debug mode. Optional one-off `vmArguments` / `programArguments` (appended) and `environment` (merged) apply to that run only; the saved config is never modified | Ctrl+F2, F11 |
 | `stop_java_application` | Stop all running Java applications | Ctrl+F2 |
 
 ### Maven Integration
