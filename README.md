@@ -34,7 +34,7 @@ This plugin exposes **25 tools** through the MCP protocol, covering code search,
 ### Source Actions & Refactoring
 | Tool | Description | Eclipse Equivalent |
 |------|-------------|--------------------|
-| `source_actions` | Generate getters/setters, constructors, toString, hashCode/equals | Alt+Shift+S |
+| `source_actions` | Generate missing getters/setters, a constructor using fields, hashCode/equals or toString with the project's code templates; hashCode, equals and toString are kept as the last members of the class, in that order | Alt+Shift+S |
 | `rename_element` | Rename a type, method or field; updates references workspace-wide and renames the `.java` file of a top-level type | Alt+Shift+R |
 | `move_element` | Move a class to another package; rewrites the package declaration and fixes imports workspace-wide | Alt+Shift+V |
 | `rename_package` | Rename a package across the workspace | Refactor > Rename |

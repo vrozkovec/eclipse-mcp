@@ -128,18 +128,43 @@ public class ToolsListHandler implements MCPRequestHandler {
         
         tools.add(createTool(
             "source_actions",
-            "Execute Eclipse source actions (Alt+Shift+S equivalent)",
+            "Generate code like Eclipse's Source menu (Alt+Shift+S) and save the file: the missing getters/setters, a constructor "
+                + "using fields, hashCode()/equals(), or toString(). Uses the operations behind Eclipse's own dialogs, so the code "
+                + "follows the project's code templates (javadoc comments are always generated), formatter and getter/setter naming. "
+                + "hashCode(), equals() and toString() always end up as the last members of the class, in that order (generating "
+                + "them moves existing ones there too); getters and setters are inserted before them, a constructor after the fields "
+                + "and existing constructors. Returns the signatures of the generated methods. Fails if the file has unsaved changes "
+                + "in an Eclipse editor.",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
                     "filePath", Map.of(
                         "type", "string",
-                        "description", "Path to the Java file"
+                        "description", "Absolute filesystem path of the .java file (a workspace path such as /project/src/... as returned by find_type works too)"
                     ),
                     "action", Map.of(
                         "type", "string",
-                        "description", "Source action to perform",
+                        "description", "generate_getters_setters: missing accessors, as getter/setter pairs in field order (final fields get no setter); "
+                            + "generate_constructor: a public constructor initializing the fields; generate_hashcode_equals: hashCode() and "
+                            + "equals() with Objects.hash/Objects.equals; generate_toString: toString() as 'ClassName [field=value, ...]'",
                         "enum", List.of("generate_getters_setters", "generate_constructor", "generate_toString", "generate_hashcode_equals")
+                    ),
+                    "typeName", Map.of(
+                        "type", "string",
+                        "description", "Simple or fully qualified name of the type to generate into, e.g. a nested class. Defaults to the file's primary type."
+                    ),
+                    "fields", Map.of(
+                        "type", "array",
+                        "items", Map.of("type", "string"),
+                        "description", "Names of the fields to use, in this order (the constructor's parameter order). Defaults to the fields "
+                            + "Eclipse's dialog preselects: all non-static fields, without transient ones for hashCode/equals and toString, "
+                            + "and without final fields that have an initializer for a constructor."
+                    ),
+                    "replaceExisting", Map.of(
+                        "type", "boolean",
+                        "description", "generate_hashcode_equals and generate_toString only: regenerate the methods if they already exist. "
+                            + "If false, the call fails and the file stays unchanged.",
+                        "default", false
                     )
                 ),
                 "required", List.of("filePath", "action")

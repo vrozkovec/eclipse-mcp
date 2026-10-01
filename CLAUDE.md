@@ -50,7 +50,7 @@ eclipse-mcp/
 │       │   ├── AnalyzeTypeDependenciesTool.java # AST-based dependency analysis
 │       │   ├── GetProblemsTool.java           # Project error/warning markers
 │       │   ├── RunTestsTool.java              # JUnit test execution
-│       │   ├── SourceActionsTool.java         # Code generation (Alt+Shift+S) [stub]
+│       │   ├── SourceActionsTool.java         # Code generation (Alt+Shift+S): getters/setters, constructor, hashCode/equals, toString
 │       │   ├── RenameElementTool.java         # Rename type/method/field (Alt+Shift+R)
 │       │   ├── MoveElementTool.java           # Move class to another package (Alt+Shift+V)
 │       │   ├── JavaElementSelector.java       # Resolves 'pkg.Type#member' selectors to JDT elements
@@ -88,12 +88,7 @@ eclipse-mcp/
 | `maven_import_project` | Import existing Maven project(s) from a path — recursive scan, nested modules, skips already-imported projects (File > Import > Existing Maven Projects) | `LocalProjectScanner`, `IProjectConfigurationManager.importProjects()` |
 | `rename_element` | Rename a type, method or field; updates references workspace-wide and renames the `.java` file for a top-level type (Alt+Shift+R) | `RenameJavaElementDescriptor`, `IJavaRefactorings` |
 | `move_element` | Move a class to another package; rewrites the package declaration and fixes imports workspace-wide (Alt+Shift+V) | `MoveDescriptor`, LTK `Refactoring` |
-
-### Stubs (framework ready, return status messages)
-
-| Tool | Description |
-|------|-------------|
-| `source_actions` | Code generation (getters, constructors, toString, hashCode/equals) |
+| `source_actions` | Generate missing getters/setters, a constructor using fields, hashCode/equals or toString (Alt+Shift+S) with the project's code templates; hashCode, equals, toString are kept as the last members, in that order | internal `AddGetterSetterOperation`, `AddCustomConstructorOperation`, `GenerateHashCodeEqualsOperation`, `GenerateToStringOperation` |
 
 ## Architecture
 
