@@ -335,7 +335,14 @@ public class ToolsListHandler implements MCPRequestHandler {
 
         tools.add(createTool(
             "clean_workspace",
-            "Clean projects in the workspace (Project > Clean). If projectName is provided, only that project is cleaned. Otherwise all open projects are cleaned. If mavenClean is true, 'mvn clean' is run first via an m2e launch, followed by a refresh from disk, then the Eclipse clean.",
+            "Clean projects in the workspace (Project > Clean). If projectName is provided, only that project is cleaned. "
+                + "Otherwise all open projects are cleaned. Returns at once; poll get_build_status for the rebuild. "
+                + "If mavenClean is true, 'mvn clean' is run first via an m2e launch. The project and every open project "
+                + "nested inside it (an aggregator's modules) are then refreshed from disk and cleaned, and once Eclipse's "
+                + "rebuild has finished they are refreshed and cleaned again, so that sources the Maven builder regenerates "
+                + "during the rebuild (e.g. JPA metamodels) get compiled. In this mode the call blocks until the second "
+                + "rebuild finishes (up to 5 minutes after Maven) and also returns building (true only if that wait timed "
+                + "out) and errors (error markers left in the cleaned projects).",
             Map.of(
                 "type", "object",
                 "properties", Map.of(
@@ -345,7 +352,7 @@ public class ToolsListHandler implements MCPRequestHandler {
                     ),
                     "mavenClean", Map.of(
                         "type", "boolean",
-                        "description", "Run 'mvn clean' on the target project(s) before the Eclipse clean (then refresh from disk). Projects without the Maven nature are skipped. Runs sequentially - slow on large workspaces; prefer passing projectName (an aggregator project cleans all its modules in one run).",
+                        "description", "Run 'mvn clean' on the target project(s) first, then refresh and clean them twice, waiting for each rebuild (see the tool description). Projects without the Maven nature are skipped. Runs sequentially - slow on large workspaces; prefer passing projectName (an aggregator project cleans all its modules in one run).",
                         "default", false
                     )
                 )

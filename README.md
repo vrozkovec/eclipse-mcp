@@ -20,7 +20,7 @@ This plugin exposes **25 tools** through the MCP protocol, covering code search,
 | `list_projects` | List all projects in the workspace with name, location, and open status | — |
 | `resolve_project` | Resolve a filesystem path to its containing Eclipse project | — |
 | `refresh_workspace` | Refresh projects (picks up external file changes) | F5 |
-| `clean_workspace` | Clean/rebuild projects; optional `mavenClean` runs `mvn clean` first (then refresh, then clean) | Project > Clean |
+| `clean_workspace` | Clean/rebuild projects; optional `mavenClean` runs `mvn clean` first, then refresh + clean of the project and its nested modules twice (the second round compiles sources regenerated during the first rebuild, e.g. JPA metamodels), blocking until the rebuild is done | Project > Clean |
 | `get_problems` | Get compilation errors/warnings for a project | Problems view |
 | `get_build_status` | Check if Eclipse is currently building; includes error/warning counts | — |
 
